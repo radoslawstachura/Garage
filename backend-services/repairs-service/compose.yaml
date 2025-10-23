@@ -1,0 +1,36 @@
+name: repairs-backend
+
+services:
+  repairs:
+    build:
+      dockerfile: Dockerfile.dev
+      context: .
+    ports:
+      - 3003:80
+    env_file:
+      - ./.env
+    networks:
+      - public-net
+      - repairs-net
+    depends_on:
+      - repairs-postgres
+      - repairs-redis
+  repairs-postgres:
+    image: postgres:17.4-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=repairs
+    volumes:
+      - type: bind
+        source: ./db_config/init.sql
+        target: /docker-entrypoint-initdb.d/init.sql
+    networks:
+      - repairs-net
+  repairs-redis:
+    image: redis:alpine3.22
+    networks:
+      - repairs-net
+
+networks:
+  repairs-net:

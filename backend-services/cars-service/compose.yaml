@@ -1,0 +1,38 @@
+name: cars-backend
+
+services:
+  cars:
+    build:
+      dockerfile: Dockerfile.dev
+      context: .
+    ports:
+      - 3010:80
+    env_file:
+      - ./.env
+    networks:
+      - public-net
+      - cars-net
+    depends_on:
+      - cars-postgres
+      - cars-redis
+  cars-postgres:
+    # possible change
+    image: postgres:17.4-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=cars
+    volumes:
+      - type: bind
+        source: ./db_config/init.sql
+        target: /docker-entrypoint-initdb.d/init.sql
+        read_only: true
+    networks:
+      - cars-net
+  cars-redis:
+    image: redis:alpine3.22
+    networks:
+      - cars-net
+
+networks:
+  cars-net:

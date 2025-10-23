@@ -1,0 +1,36 @@
+name: mechanics-backend
+
+services:
+  mechanics:
+    build:
+      dockerfile: Dockerfile.dev
+      context: .
+    ports:
+      - 3001:80
+    env_file:
+      - ./.env
+    networks:
+      - public-net
+      - mechanics-net
+    depends_on:
+      - mechanics-postgres
+      - mechanics-redis
+  mechanics-postgres:
+    image: postgres:17.4-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=mechanics
+    volumes:
+      - type: bind
+        source: ./db_config/init.sql
+        target: /docker-entrypoint-initdb.d/init.sql
+    networks:
+      - mechanics-net
+  mechanics-redis:
+    image: redis:alpine3.22
+    networks:
+      - mechanics-net
+
+networks:
+  mechanics-net:

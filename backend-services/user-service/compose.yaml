@@ -1,0 +1,36 @@
+name: user-backend
+
+services:
+  user:
+    build:
+      dockerfile: Dockerfile.dev
+      context: .
+    ports:
+      - 3004:80
+    env_file:
+      - ./.env
+    networks:
+      - public-net
+      - user-net
+    depends_on:
+      - user-postgres
+      - user-redis
+  user-postgres:
+    image: postgres:17.4-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=user
+    volumes:
+      - type: bind
+        source: ./db_config/init.sql
+        target: /docker-entrypoint-initdb.d/init.sql
+    networks:
+      - user-net
+  user-redis:
+    image: redis:alpine3.22
+    networks:
+      - user-net
+
+networks:
+  user-net:

@@ -1,0 +1,27 @@
+name: statistics-backend
+
+services:
+    statistics:
+        build:
+            dockerfile: Dockerfile.dev
+            context: .
+        ports:
+            - 3011:80
+        env_file:
+            - ./.env
+        networks:
+            - public-net
+            - statistics-net
+            - cars-net
+            - mechanics-net
+            - owners-net
+            - repairs-net
+        depends_on:
+            - cars-redis
+    statistics-redis:
+        image: redis:alpine3.22
+        networks:
+            - statistics-net
+
+networks:
+    statistics-net:

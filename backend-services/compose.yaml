@@ -1,0 +1,38 @@
+include:
+  - path: cars-service/compose.yaml
+  - path: mechanics-service/compose.yaml
+  - path: owners-service/compose.yaml
+  - path: repairs-service/compose.yaml
+  - path: user-service/compose.yaml
+  - path: statistics-service/compose.yaml
+
+services:
+  reverse-proxy:
+    image: nginx:1.27.0
+    volumes:
+      - type: bind
+        source: ./reverse-proxy/nginx.conf
+        target: /etc/nginx/nginx.conf
+    ports:
+      - 8080:80
+    networks:
+      - public-net
+    depends_on:
+      - cars
+      - mechanics
+      - owners
+      - repairs
+      - user
+      - statistics
+
+  redis-blacklist:
+    image: redis:alpine3.22
+    networks:
+      - cars-net
+      - mechanics-net
+      - owners-net
+      - repairs-net
+      - user-net
+
+networks:
+  public-net:

@@ -1,0 +1,36 @@
+name: owners-backend
+
+services:
+  owners:
+    build:
+      dockerfile: Dockerfile.dev
+      context: .
+    ports:
+      - 3002:80
+    env_file:
+      - ./.env
+    networks:
+      - public-net
+      - owners-net
+    depends_on:
+      - owners-postgres
+      - owners-redis
+  owners-postgres:
+    image: postgres:17.4-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=owners
+    volumes:
+      - type: bind
+        source: ./db_config/init.sql
+        target: /docker-entrypoint-initdb.d/init.sql
+    networks:
+      - owners-net
+  owners-redis:
+    image: redis:alpine3.22
+    networks:
+      - owners-net
+
+networks:
+  owners-net:

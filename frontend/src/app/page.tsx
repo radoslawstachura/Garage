@@ -1,0 +1,1237 @@
+"use client"
+
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import z from "zod";
+
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  AreaChart,
+  Area,
+  XAxis,
+  Tooltip,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+} from "recharts";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  CompactCard,
+  CompactCardAction,
+  CompactCardContent,
+  CompactCardDescription,
+  CompactCardFooter,
+  CompactCardHeader,
+  CompactCardTitle,
+} from "@/components/CompactCard";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import Link from "next/link";
+import { Ghost } from "lucide-react";
+import { X } from 'lucide-react';
+import { ArrowDownUp } from 'lucide-react';
+import { Plus } from "lucide-react"
+import { Loader2 } from "lucide-react";
+import { Pencil } from "lucide-react";
+import { Trophy } from "lucide-react";
+import { toast } from "sonner";
+
+import { FormCombobox } from "@/components/FormCombobox";
+import { apiClient } from "@/lib/apiClient";
+import { Car } from "@/types/Car";
+import { Mechanic } from "@/types/Mechanic";
+import { Repair } from "@/types/Repair";
+import { useJwt } from "@/contexts/JwtContext";
+
+const formSchema = z.object({
+  car_id: z.string().regex(/\b[0-9]+\b/),
+  mechanic_id: z.string().regex(/\b[0-9]+\b/),
+  date: z.string().regex(/\b[0-9]{4}.[0-9]{2}.[0-9]{2}\b/),
+  time: z.string().regex(/\b[0-9]{1,2}:[0-9]{2}\b/),
+  description: z.string().min(1),
+  estimated_work_time: z.string().regex(/\b[0-9]+\.?[0-9]{0,}\b/),
+  cost: z.string().regex(/\b[0-9]+\.?[0-9]{0,}\b/),
+  work_time: z.string().regex(/\b[0-9]+\.?[0-9]{0,}\b/),
+  status: z.string()
+});
+
+interface Income {
+  month: number;
+  year: number;
+  totalIncome: number;
+};
+
+interface RepairsPerMonth {
+  month: number;
+  year: number;
+  repair_count: number;
+};
+
+interface Filters {
+  category: string;
+  brand: string;
+  model: string;
+  mechanic: string;
+  dateFrom: string;
+  dateTo: string;
+};
+
+export default function Home() {
+  const [repairs, setRepairs] = useState<Repair[]>([]);
+  // const [filteredRepairs, setFilteredRepairs] = useState<Repair[]>([]);
+  const [filters, setFilters] = useState<Filters>({
+    category: "all",
+    brand: "",
+    model: "",
+    mechanic: "",
+    dateFrom: "",
+    dateTo: ""
+  });
+  const [cars, setCars] = useState<Car[]>([]);
+  const [mechanics, setMechanics] = useState<Mechanic[]>([]);
+  const [created, setCreated] = useState<number>(0);
+  const [inProgress, setInProgress] = useState<number>(0);
+  const [completed, setCompleted] = useState<number>(0);
+  const [revenue, setRevenue] = useState<number>(0);
+  const [incomeData, setIncomeData] = useState<Income[]>([]);
+  const [repairsPerMonth, setRepairsPerMonth] = useState<RepairsPerMonth[]>([]);
+  const [status, setStatus] = useState<string>("all");
+  const [sort, setSort] = useState<string>("");
+  const [direction, setDirection] = useState<boolean>(true);
+  const [open, setOpen] = useState<boolean>(false);
+  const [carSelectOpen, setCarSelectOpen] = useState<boolean>(false);
+  const [mechanicSelectOpen, setMechanicSelectOpen] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isDialogLoading, setIsDialogLoading] = useState<boolean>(false);
+  const [pieChartData, setPieChartData] = useState<Array<object>>([]);
+
+  useEffect(() => {
+    if (created + inProgress + completed > 0) {
+      setPieChartData([
+        { name: "Pending", value: created },
+        { name: "In progress", value: inProgress },
+        { name: "Finished", value: completed },
+      ]);
+    }
+  }, [created, inProgress, completed]);
+
+  const staticCharts = [
+    // {
+    //   type: "area",
+    //   title: "Liczba napraw w miesiącu",
+    //   data: [
+    //     { label: "Sty", value: 42 },
+    //     { label: "Lut", value: 38 },
+    //     { label: "Mar", value: 50 },
+    //     { label: "Kwi", value: 47 },
+    //     { label: "Maj", value: 52 },
+    //     { label: "Cze", value: 60 },
+    //     { label: "Lip", value: 55 },
+    //     { label: "Sie", value: 63 },
+    //     { label: "Wrz", value: 59 },
+    //     { label: "Paź", value: 65 },
+    //     { label: "Lis", value: 58 },
+    //     { label: "Gru", value: 70 },
+    //   ],
+    //   color: "#4F46E5",
+    // },
+    // {
+    //   type: "area",
+    //   title: "Przychód (ostatnie 12 miesięcy)",
+    //   data: [
+    //     { label: "Sty", value: 8200 },
+    //     { label: "Lut", value: 7600 },
+    //     { label: "Mar", value: 9000 },
+    //     { label: "Kwi", value: 8700 },
+    //     { label: "Maj", value: 9500 },
+    //     { label: "Cze", value: 10400 },
+    //     { label: "Lip", value: 9800 },
+    //     { label: "Sie", value: 11200 },
+    //     { label: "Wrz", value: 10700 },
+    //     { label: "Paź", value: 11600 },
+    //     { label: "Lis", value: 10900 },
+    //     { label: "Gru", value: 12200 },
+    //   ],
+    //   color: "#16A34A",
+    // },
+    // {
+    //   type: "bar",
+    //   title: "Czas pracy mechaników (h)",
+    //   data: [
+    //     { label: "Pon", value: 32 },
+    //     { label: "Wt", value: 28 },
+    //     { label: "Śr", value: 40 },
+    //     { label: "Czw", value: 30 },
+    //     { label: "Pt", value: 22 },
+    //     { label: "Sob", value: 15 },
+    //   ],
+    //   color: "#F59E0B",
+    // },
+    // {
+    //   type: "bar",
+    //   title: "Średni koszt naprawy",
+    //   data: [
+    //     { label: "Pon", value: 320 },
+    //     { label: "Wt", value: 290 },
+    //     { label: "Śr", value: 340 },
+    //     { label: "Czw", value: 310 },
+    //     { label: "Pt", value: 270 },
+    //     { label: "Sob", value: 250 },
+    //   ],
+    //   color: "#EF4444",
+    // },
+  ];
+
+  const { role } = useJwt();
+
+  async function getRepairs() {
+    setIsLoading(true);
+    try {
+      const repairsData = await apiClient.get<Repair[]>("/repairs");
+
+      const repairsWithPlaceholders = repairsData.map(repair => ({
+        ...repair,
+        carData: null,
+        mechanicData: null
+      }));
+
+      setRepairs(repairsWithPlaceholders);
+
+      repairsWithPlaceholders.forEach(async (repair, index) => {
+        try {
+          const [carData, mechanicData] = await Promise.all([
+            apiClient.get<Car>(`/cars/${repair.car_id}`),
+            apiClient.get<Mechanic>(`/mechanics/${repair.mechanic_id}`)
+          ]);
+
+          setRepairs(currentRepairs =>
+            currentRepairs.map((r, i) =>
+              i === index ? { ...r, carData, mechanicData } : r
+            )
+          );
+        } catch (error) {
+          console.log(error);
+        }
+      });
+      setIsLoading(false);
+
+      setCreated(repairsData.filter(r => r.status == "pending").length);
+      setInProgress(repairsData.filter(r => r.status == "in progress").length);
+      setCompleted(repairsData.filter(r => r.status == "finished").length);
+
+      setRevenue(repairsData.reduce((sum, r) => sum + Number(r.cost), 0));
+    } catch (error) {
+      setError(error.response.data.message);
+    }
+  }
+
+  async function getCars() {
+    try {
+      const carsData = await apiClient.get<Car[]>("/cars");
+
+      setCars(carsData);
+    } catch (error) {
+      console.log(error.response.data.message);
+    }
+  }
+
+  async function getMechanics() {
+    try {
+      const mechanicsData = await apiClient.get<Mechanic[]>("/mechanics");
+
+      setMechanics(mechanicsData);
+    } catch (error) {
+      console.log(error.response.data.message);
+    }
+  }
+
+  function getStatusStyle(repair: Repair) {
+    if (repair.status == "pending") {
+      return {
+        color: "#5664d2",
+        background: "#e4e6f7",
+      }
+    } else if (repair.status == "in progress") {
+      return {
+        color: "#fcb92c",
+        background: "#fef4e1"
+      }
+    } else {
+      return {
+        color: "#1ccb8c",
+        background: "#d2f1e7"
+      }
+    }
+  }
+
+  const filteredRepairs = repairs.filter(r => {
+    const matchesCategory = filters.category === "all" || r.status === filters.category;
+    const matchesBrand = !filters.brand ||
+      r.carData?.brand
+        .toLowerCase()
+        .includes(filters.brand.toLowerCase());
+    const matchesModel = !filters.model ||
+      r.carData?.model
+        .toLowerCase()
+        .includes(filters.model.toLowerCase());
+    const matchesMechanic = !filters.mechanic ||
+      `${r.mechanicData?.firstname} ${r.mechanicData?.lastname}`
+        .toLowerCase()
+        .includes(filters.mechanic.toLowerCase());
+    const repairDate = new Date(r.date).getTime();
+    const dateFrom = !filters.dateFrom || repairDate >= new Date(filters.dateFrom).getTime();
+    const dateTo = !filters.dateTo || repairDate <= new Date(filters.dateTo).getTime();
+
+    return matchesCategory && matchesBrand && matchesModel &&
+      matchesMechanic && dateFrom && dateTo;
+  });
+  function getDate(date: string) {
+    const isoDate = new Date(date);
+
+    return isoDate.toLocaleDateString("pl-PL", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric"
+    });
+  }
+
+  async function addRepairSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      setIsDialogLoading(true);
+
+      await apiClient.post("/repairs", values);
+
+      getRepairs();
+
+      toast.success("Repair created successfully");
+
+      form.reset();
+
+      setOpen(false);
+      setIsDialogLoading(false);
+    } catch (error) {
+      console.log(error.response.data);
+    }
+  }
+
+  async function deleteRepairSubmit(id: number) {
+    // try {
+    //   await apiClient.delete("/repairs");
+    // } catch(error) {
+    //   console.log(error);
+    // }
+  }
+
+  useEffect(() => {
+    async function fetchIncome() {
+      try {
+        const data = await apiClient.get<Income[]>(`/statistics/repairs/income/monthly`);
+        console.log(data);
+        setIncomeData(data);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+
+    async function fetchRepairsPerMonth() {
+      try {
+        const data = await apiClient.get<RepairsPerMonth[]>(`/statistics/repairs/monthly`);
+        console.log(data);
+        setRepairsPerMonth(data);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+
+    getRepairs();
+    getCars();
+    getMechanics();
+    fetchIncome();
+    fetchRepairsPerMonth();
+  }, []);
+
+  // useEffect(() => {
+  //   filterRepairs(status);
+  // }, [repairs, status]);
+
+  // useEffect(() => {
+  //   if(sort == "registration_number")
+  //     filteredRepairs.sort((a, b) => a.carData?.registration_number)
+  // }, [sort, direction]);
+
+  const displayedRepairs = repairs.filter(
+    r => status === "all" || r.status === status
+  );
+  const loading = isLoading || repairs.length === 0;
+
+  const repairsPerMechanic = (mechanics.length && repairs.length)
+    ? mechanics
+      .map(m => ({
+        mechanic: m,
+        count: repairs.filter(r => r.mechanic_id == m.mechanic_id).length
+      }))
+      .sort((a, b) => b.count - a.count)
+    : [];
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      car_id: "1",
+      mechanic_id: "1",
+      date: "",
+      time: "",
+      description: "",
+      estimated_work_time: "",
+      work_time: "",
+      cost: "",
+      status: ""
+    }
+  });
+
+  const incomeChartData = incomeData.map((item) => ({
+    label: item.month >= 10 ? `${item.month}.${item.year}` : `0${item.month}.${item.year}`,
+    value: item.totalIncome,
+  }));
+
+  const repairsChartData = repairsPerMonth.map((item) => ({
+    label: item.month >= 10 ? `${item.month}.${item.year}` : `0${item.month}.${item.year}`,
+    value: item.repair_count
+  }));
+
+  const allCharts = [
+    ...staticCharts,
+    {
+      type: "area",
+      title: "Przychód (ostatnie 12 miesięcy)",
+      data: incomeChartData,
+      color: "#16A34A",
+    },
+    {
+      type: "area",
+      title: "Repairs per month (last 12 months)",
+      data: repairsChartData,
+      color: "#1676a3ff"
+    }
+  ];
+
+  return (
+    <div style={{
+      padding: "20px"
+    }}>
+      {/* <div className="top" style={{
+        display: "flex"
+      }}>
+        <CompactCard className="max-h-36" style={{
+          width: "20%",
+          background: "#5664d2",
+          color: "white"
+        }}>
+          <CompactCardHeader>
+            <CompactCardTitle>Pending</CompactCardTitle>
+          </CompactCardHeader>
+          <CompactCardContent>
+            <p style={{ fontSize: "20px" }}>{created}</p>
+          </CompactCardContent>
+          <hr />
+          <CompactCardFooter>
+            <Button
+              onClick={() => setStatus("pending")}
+              className="bg-[white] text-[18px] text-[#5664d2] hover:bg-[#cdd0f5] hover:text-[#333] cursor-pointer"
+            >View</Button>
+          </CompactCardFooter>
+        </CompactCard>
+        <CompactCard className="max-h-36" style={{
+          width: "20%",
+          background: "#fcb92c",
+          color: "white"
+        }}>
+          <CompactCardHeader>
+            <CompactCardTitle>In progress</CompactCardTitle>
+          </CompactCardHeader>
+          <CompactCardContent>
+            <p style={{ fontSize: "20px" }}>{inProgress}</p>
+          </CompactCardContent>
+          <hr />
+          <CompactCardFooter>
+            <Button
+              onClick={() => setStatus("in progress")}
+              className="bg-[white] text-[18px] text-[#fcb92c] hover:bg-[#fef4e1] hover:text-[#333] cursor-pointer"
+            >View</Button>
+          </CompactCardFooter>
+        </CompactCard>
+        <CompactCard className="max-h-36" style={{
+          width: "20%",
+          background: "#1cbb8c",
+          color: "white"
+        }}>
+          <CompactCardHeader>
+            <CompactCardTitle>Completed</CompactCardTitle>
+          </CompactCardHeader>
+          <CompactCardContent>
+            <p style={{ fontSize: "20px" }}>{completed}</p>
+          </CompactCardContent>
+          <hr />
+          <CompactCardFooter>
+            <Button
+              onClick={() =>
+                setStatus("finished")
+              }
+              className="bg-[white] text-[18px] text-[#1ccb8c] hover:bg-[#d2f1e7] hover:text-[#333] cursor-pointer"
+            >View</Button>
+          </CompactCardFooter>
+        </CompactCard>
+        <CompactCard className="max-h-36" style={{
+          width: "20%",
+          background: "#343a40",
+          color: "white"
+        }}>
+          <CompactCardHeader>
+            <CompactCardTitle>Total Revenue</CompactCardTitle>
+          </CompactCardHeader>
+          <CompactCardContent>
+            <p style={{ fontSize: "20px" }}>{revenue.toFixed(2)}</p>
+          </CompactCardContent>
+          <hr />
+          <CompactCardFooter>
+            <p>Card footer</p>
+          </CompactCardFooter>
+        </CompactCard>
+      </div> */}
+      {/* {
+        filteredRepairs.length > 0 && */}
+      <div>{String(isLoading)}</div>
+      <div>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium
+              flex items-center gap-2 rounded-xl shadow-md transition-all
+              hover:shadow-lg cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              Add Record
+            </Button>
+          </DialogTrigger>
+          <DialogContent showCloseButton={false}>
+            {isDialogLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="animate-spin h-8 w-8 text-gray-500" />
+                <span className="ml-2 text-gray-600">Saving...</span>
+              </div>
+            ) : (
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(addRepairSubmit)}>
+                  <DialogHeader>
+                    <DialogTitle>Add repair</DialogTitle>
+                  </DialogHeader>
+                  <FormField
+                    control={form.control}
+                    name="car_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Car</FormLabel>
+                        <FormCombobox
+                          value={field.value}
+                          onChange={field.onChange}
+                          options={cars.map((car) => ({
+                            value: car.car_id.toString(),
+                            label: car.registration_number,
+                          }))}
+                          placeholder="Select a car"
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="mechanic_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Mechanic</FormLabel>
+                        <FormCombobox
+                          value={field.value}
+                          onChange={field.onChange}
+                          options={mechanics.map((m) => ({
+                            value: m.mechanic_id.toString(),
+                            label: `${m.firstname} ${m.lastname}`,
+                          }))}
+                          placeholder="Select a mechanic"
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="date"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Date</FormLabel>
+                        <FormControl>
+                          <Input placeholder="..." {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="time"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Time</FormLabel>
+                        <FormControl>
+                          <Input placeholder="..." {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Description</FormLabel>
+                        <FormControl>
+                          <Input placeholder="..." {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="estimated_work_time"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Estimated work time</FormLabel>
+                        <FormControl>
+                          <Input placeholder="..." {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="work_time"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Work time</FormLabel>
+                        <FormControl>
+                          <Input placeholder="..." {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="cost"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Cost</FormLabel>
+                        <FormControl>
+                          <Input placeholder="..." {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Status</FormLabel>
+                        <FormControl>
+                          <Input placeholder="..." {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <DialogFooter className="pt-5">
+                    <DialogClose asChild>
+                      <Button className="bg-gray-500 hover:bg-gray-600 text-white font-medium
+              flex items-center gap-2 rounded-xl shadow-md transition-all
+              hover:shadow-lg cursor-pointer">Cancel</Button>
+                    </DialogClose>
+                    <Button className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium
+              flex items-center gap-2 rounded-xl shadow-md transition-all
+              hover:shadow-lg cursor-pointer" type="submit">Submit</Button>
+                  </DialogFooter>
+                </form>
+              </Form>
+            )}
+          </DialogContent>
+        </Dialog>
+      </div>
+      {/* === STATUS PIE + SIDE INSIGHTS === */}
+      <div className="grid grid-cols-1 md:grid-cols-[3fr_2fr] gap-6 mt-6 items-center">
+        {/* LEFT: Pie Chart */}
+        <Card className="shadow-md hover:shadow-lg transition-all duration-300 border border-gray-200">
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold text-gray-800">
+              Udział statusów napraw
+            </CardTitle>
+            <CardDescription>Procentowy podział wszystkich napraw</CardDescription>
+          </CardHeader>
+          <CardContent className="flex justify-center items-center">
+            {pieChartData &&
+              <ResponsiveContainer width="100%" height={260}>
+                <PieChart>
+                  <Pie
+                    data={pieChartData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    fill="#8884d8"
+                    label={({ name, percent }) =>
+                      `${name} ${(percent * 100).toFixed(1)}%`
+                    }
+                    isAnimationActive={true}
+                  >
+                    <Cell key="pending" fill="#5664d2" />
+                    <Cell key="inProgress" fill="#fcb92c" />
+                    <Cell key="finished" fill="#1cbb8c" />
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#fff",
+                      borderRadius: "8px",
+                      border: "1px solid #e5e7eb",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+                    }}
+                  />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            }
+          </CardContent>
+        </Card>
+
+        {/* RIGHT: Vertical stack of 2 cards */}
+        <div className="flex flex-col gap-4">
+          {/* Top Mechanic */}
+          <Card className="bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-md">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center justify-between">
+                <span>Top Mechanic</span>
+                <Trophy size={40} />
+              </CardTitle>
+              {repairsPerMechanic.length ? (
+                <CardDescription className="text-gray-200">
+                  Most repairs completed ({repairsPerMechanic[0].count})
+                </CardDescription>
+              ) : (
+                <Skeleton className="h-4 w-40 bg-white/50" />
+              )}
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-semibold">
+                {repairsPerMechanic.length ? (
+                  `${repairsPerMechanic[0].mechanic.firstname} ${repairsPerMechanic[0].mechanic.lastname}`
+                ) : (
+                  <Skeleton className="h-8 w-48 bg-white/50 mt-1" />
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Average Repair Time */}
+          <Card className="bg-gradient-to-br from-indigo-500 to-blue-600 text-white shadow-md">
+            <CardHeader>
+              <CardTitle className="text-lg">Average Repair Time</CardTitle>
+              <CardDescription className="text-gray-200">
+                Last 30 days
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-semibold">5.4h</p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+      {/* === CHARTS SECTION === */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6">
+        {allCharts.map((chart, i) => (
+          <Card
+            key={i}
+            className="shadow-md hover:shadow-lg transition-all duration-300 border border-gray-200"
+          >
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold text-gray-800">
+                {chart.title}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={180}>
+                {chart.type === "area" ? (
+                  <AreaChart data={chart.data} className="px-1">
+                    <defs>
+                      <linearGradient id={`color${i}`} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={chart.color} stopOpacity={0.3} />
+                        <stop offset="95%" stopColor={chart.color} stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <XAxis
+                      dataKey="label"
+                      tickLine={true}
+                      axisLine={false}
+                      interval={0}
+                      tick={({ x, y, payload, index }) => {
+                        const isVisible = index % 2 === 1;
+                        return (
+                          <text
+                            x={x}
+                            y={y + 15}
+                            textAnchor="middle"
+                            fill="#4b5563"
+                            fontSize={12}
+                            opacity={isVisible ? 1 : 0}
+                          >
+                            {isVisible ? payload.value : ""}
+                          </text>
+                        );
+                      }}
+                    />
+
+                    <Tooltip
+                      cursor={{ stroke: "rgba(0, 0, 0, 0.1)" }}
+                      contentStyle={{
+                        backgroundColor: "#fff",
+                        borderRadius: "8px",
+                        border: "1px solid #e5e7eb",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="value"
+                      stroke={chart.color}
+                      fillOpacity={1}
+                      fill={`url(#color${i})`}
+                      strokeWidth={2.5}
+                      dot={{ r: 4, stroke: chart.color, strokeWidth: 2, fill: "white" }}
+                    />
+                  </AreaChart>
+                ) : (
+                  <BarChart data={chart.data}>
+                    <XAxis dataKey="label" tickLine={false} axisLine={false} />
+                    <Tooltip
+                      cursor={{ fill: "rgba(0, 0, 0, 0.05)" }}
+                      contentStyle={{
+                        backgroundColor: "#fff",
+                        borderRadius: "8px",
+                        border: "1px solid #e5e7eb",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+                      }}
+                    />
+                    <Bar
+                      dataKey="value"
+                      fill={chart.color}
+                      radius={[6, 6, 0, 0]}
+                      barSize={30}
+                    />
+                  </BarChart>
+                )}
+              </ResponsiveContainer>
+
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      <div style={{
+        height: "32px"
+      }} className="relative">
+        {status != "all" &&
+          <button
+            onClick={() => setStatus("all")}
+            className="
+          absolute right-0 top-0 flex items-center gap-1
+          text-[#f87171] hover:text-[#ff2222] cursor-pointer
+          "
+          >
+            <X size={32} color="#f87171" strokeWidth={1.5} />
+            Reset filters
+          </button>
+        }
+      </div>
+      {/* Filters */}
+      <div className="mb-4 flex flex-col sm:flex-row items-center gap-3">
+        {/* <Input
+          placeholder="Category"
+          value={filters.category}
+          onChange={(e) => setFilters((f) => ({ ...f, category: e.target.value }))}
+          className="w-full sm:w-1/3"
+        /> */}
+
+        <Select
+          value={filters.category}
+          onValueChange={(value) =>
+            setFilters((f) => ({ ...f, category: value }))
+          }
+        >
+          <SelectTrigger className="w-full sm:w-1/3">
+            <SelectValue placeholder="Select category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All</SelectItem>
+            <SelectItem value="finished">Finished</SelectItem>
+            <SelectItem value="in progress">In progress</SelectItem>
+            <SelectItem value="pending">Created</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Input
+          placeholder="Brand"
+          value={filters.brand}
+          onChange={(e) => setFilters((f) => ({ ...f, brand: e.target.value }))}
+          className="w-full sm:w-1/3"
+        />
+        <Input
+          placeholder="Model"
+          value={filters.model}
+          onChange={(e) => setFilters((f) => ({ ...f, model: e.target.value }))}
+          className="w-full sm:w-1/3"
+        />
+        <Input
+          placeholder="Mechanic"
+          value={filters.mechanic}
+          onChange={(e) => setFilters((f) => ({ ...f, mechanic: e.target.value }))}
+          className="w-full sm:w-1/3"
+        />
+
+        <Input
+          type="date"
+          value={filters.dateFrom}
+          onChange={(e) => setFilters((f) => ({ ...f, dateFrom: e.target.value }))}
+          className="w-full sm:w-1/4"
+        />
+        <Input
+          type="date"
+          value={filters.dateTo}
+          onChange={(e) => setFilters((f) => ({ ...f, dateTo: e.target.value }))}
+          className="w-full sm:w-1/4"
+        />
+      </div>
+
+      <div>Showing {filteredRepairs.length} {filteredRepairs.length > 1 ?
+        <span>repairs</span> : <span>repair</span>
+
+      }</div>
+
+      <div className="rounded-lg shadow-sm overflow-hidden border border-gray-200 mb-4">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-gray-100">
+              <TableHead className="px-3 py-2 font-semibold text-gray-700 text-sm">
+                Status
+              </TableHead>
+              <TableHead onClick={() => {
+                setSort("registration_number");
+                if (direction || sort != "registration_number")
+                  setDirection(false);
+                else
+                  setDirection(true)
+              }} className="px-3 py-2 font-semibold text-gray-700 text-sm cursor-pointer">
+                <span className="flex gap-1">
+                  Vehicle number
+                  <ArrowDownUp strokeWidth={1.5} size={20} />
+                </span>
+              </TableHead>
+              <TableHead onClick={() => {
+                setSort("brand");
+                if (direction || sort != "brand")
+                  setDirection(false);
+                else
+                  setDirection(true)
+              }} className="px-3 py-2 font-semibold text-gray-700 text-sm cursor-pointer">
+                <span className="flex gap-1">
+                  Brand & model
+                  <ArrowDownUp strokeWidth={1.5} size={20} />
+                </span>
+              </TableHead>
+              <TableHead onClick={() => {
+                setSort("mechanic");
+                if (direction || sort != "mechanic")
+                  setDirection(false);
+                else
+                  setDirection(true)
+              }} className="px-3 py-2 font-semibold text-gray-700 text-sm cursor-pointer">
+                <span className="flex gap-1">
+                  Mechanic
+                  <ArrowDownUp strokeWidth={1.5} size={20} />
+                </span>
+              </TableHead>
+              <TableHead onClick={() => {
+                setSort("date");
+                if (direction || sort != "date")
+                  setDirection(false);
+                else
+                  setDirection(true)
+              }} className="px-3 py-2 font-semibold text-gray-700 text-sm cursor-pointer">
+                <span className="flex gap-1">
+                  Date
+                  <ArrowDownUp strokeWidth={1.5} size={20} />
+                </span>
+              </TableHead>
+              <TableHead onClick={() => {
+                setSort("time");
+                if (direction || sort != "time")
+                  setDirection(false);
+                else
+                  setDirection(true)
+              }} className="px-3 py-2 font-semibold text-gray-700 text-sm cursor-pointer">
+                <span className="flex gap-1">
+                  Time
+                  <ArrowDownUp strokeWidth={1.5} size={20} />
+                </span>
+              </TableHead>
+              <TableHead onClick={() => {
+                setSort("cost");
+                if (direction || sort != "cost")
+                  setDirection(false);
+                else
+                  setDirection(true)
+              }} className="px-3 py-2 font-semibold text-gray-700 text-sm cursor-pointer">
+                <span className="flex gap-1">
+                  Cost
+                  <ArrowDownUp strokeWidth={1.5} size={20} />
+                </span>
+              </TableHead>
+              <TableHead className="px-3 py-2 font-semibold text-gray-700 text-sm text-right"></TableHead>
+              {role === "admin" &&
+                <>
+                  <TableHead className="px-3 py-2 font-semibold text-gray-700 text-sm text-right"></TableHead>
+                  <TableHead className="px-3 py-2 font-semibold text-gray-700 text-sm text-right"></TableHead>
+                </>
+              }
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {loading ? (
+              [...Array(5)].map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell colSpan={role === "admin" ? 10 : 8}>
+                    <Skeleton className="h-4 w-full rounded-md bg-gray-300 animate-pulse" />
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : filteredRepairs.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={role === "admin" ? 10 : 8} className="text-center py-6 text-gray-500">
+                  <div className="flex flex-col items-center justify-center py-20 text-gray-500">
+                    <Ghost size={64} strokeWidth={1.5} className="mb-4" />
+                    <h2 className="text-2xl font-semibold mb-2">
+                      No repairs found
+                    </h2>
+                    <p className="text-lg mb-2">
+                      No data available for the selected filters.
+                    </p>
+                    <button
+                      onClick={() => setFilters({
+                        category: "all",
+                        brand: "",
+                        model: "",
+                        mechanic: "",
+                        dateFrom: "",
+                        dateTo: ""
+                      })}
+                      className="
+                          flex items-center gap-1
+                          text-[#f87171] hover:text-[#ff2222] cursor-pointer
+                        "
+                    >
+                      <X size={32} color="#f87171" strokeWidth={1.5} />
+                      Reset filters
+                    </button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredRepairs.map((repair) => (
+                <TableRow
+                  key={repair.repair_id}
+                  className="border-b last:border-0 hover:bg-gray-50 transition-colors"
+                >
+                  <TableCell className="px-3 py-2 text-sm">
+                    <span
+                      style={{
+                        ...getStatusStyle(repair),
+                        padding: "5px 8px",
+                        borderRadius: "5px",
+                        fontSize: "0.85rem",
+                      }}
+                    >
+                      {repair.status}
+                    </span>
+                  </TableCell>
+                  <TableCell className="px-3 py-2 text-sm">
+                    {repair.carData ? (
+                      <Link
+                        href={`/car/${repair.car_id}`}
+                        className="underline text-blue-600 hover:text-blue-800"
+                      >
+                        {repair.carData.registration_number}
+                      </Link>
+                    ) : (
+                      <Skeleton className="h-4 w-24 rounded-md bg-gray-300 animate-pulse" />
+                    )}
+                  </TableCell>
+                  <TableCell className="px-3 py-2 text-sm">
+                    {repair.carData ? (
+                      <>
+                        {repair.carData?.brand} {repair.carData?.model}
+                      </>
+                    ) : (
+                      <Skeleton className="h-4 w-24 rounded-md bg-gray-300 animate-pulse" />
+                    )}
+                  </TableCell>
+                  <TableCell className="px-3 py-2 text-sm">
+                    {repair.mechanicData ? (
+                      <Link
+                        href={`/mechanic/${repair.mechanic_id}`}
+                        className="underline text-blue-600 hover:text-blue-800"
+                      >
+                        {repair.mechanicData.firstname} {repair.mechanicData.lastname}
+                      </Link>
+                    ) : (
+                      <Skeleton className="h-4 w-24 rounded-md bg-gray-300 animate-pulse" />
+                    )}
+                  </TableCell>
+                  <TableCell className="px-3 py-2 text-sm">{getDate(repair.date)}</TableCell>
+                  <TableCell className="px-3 py-2 text-sm">{repair.time}</TableCell>
+                  <TableCell className="px-3 py-2 text-sm font-medium text-gray-700">
+                    {repair.cost} $
+                  </TableCell>
+                  <TableCell className="px-3 py-2 text-right">
+                    <Link href={`/repair/${repair.repair_id}`}>
+                      <span className="bg-[#e4e6f7] text-[#5664d2] px-3 py-1 rounded-md text-sm font-medium hover:bg-[#cdd0f5] hover:text-[#333] cursor-pointer transition-colors">
+                        View
+                      </span>
+                    </Link>
+                  </TableCell>
+                  {role === "admin" &&
+                    <>
+                      <TableCell className="px-3 py-2 text-right">
+                        <span
+                          className="bg-[#d1fae5] text-[#059669] px-3 py-1 rounded-md 
+             text-sm font-medium hover:bg-[#a7f3d0] hover:text-[#065f46] cursor-pointer transition-colors"
+                        >
+                          <Pencil className="inline-block mr-1" size={16} />
+                          Edit
+                        </span>
+                      </TableCell>
+                      <TableCell className="px-3 py-2 text-right">
+                        <span onClick={() => deleteRepairSubmit(repair.repair_id)}
+                          className="bg-[#fee2e2] text-[#dc2626] px-3 py-1 rounded-md text-sm font-medium 
+                 hover:bg-[#fecaca] hover:text-[#991b1b] cursor-pointer transition-colors"
+                        >
+                          Delete
+                        </span>
+                      </TableCell>
+                    </>
+                  }
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+      {/* } */}
+      {/* {
+        !filteredRepairs.length &&
+        <div>Repairs with status &apos;{status}&apos; not found</div>
+      } */}
+      {/* {
+        !filteredRepairs.length &&
+        <div className="flex flex-col items-center justify-center py-20 text-gray-500">
+          <Ghost size={64} strokeWidth={1.5} className="mb-4" />
+          <h2 className="text-2xl font-semibold mb-2">
+            No repairs found
+          </h2>
+          <p className="text-lg mb-2">
+            There are no repairs with status &quot;{status}&quot;.
+          </p>
+          <button
+            onClick={() => setStatus("all")}
+            className="
+          flex items-center gap-1
+          text-[#f87171] hover:text-[#ff2222] cursor-pointer
+          "
+          >
+            <X size={32} color="#f87171" strokeWidth={1.5} />
+            Reset filters
+          </button>
+        </div>
+      } */}
+      <pre>
+        {JSON.stringify(repairsPerMonth, null, 2)}
+      </pre>
+      <pre>
+        {JSON.stringify(incomeData, null, 2)}
+      </pre>
+      <h1>{status}</h1>
+      <h2>{sort}</h2>
+      <pre>
+        {JSON.stringify(repairsPerMechanic, null, 2)}
+      </pre>
+      <h3>{JSON.stringify(direction)}</h3>
+      <pre>
+        {JSON.stringify(repairs, null, 2)}
+      </pre>
+    </div>
+  );
+}
