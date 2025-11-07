@@ -1,0 +1,19 @@
+services:
+  cars:
+    networks:
+      - proxy-net
+  mechanics:
+    networks:
+      - proxy-net
+  owners:
+    networks:
+      - proxy-net
+  repairs:
+    networks:
+      - proxy-net
+  statistics:
+    networks:
+      - proxy-net
+  user:
+    networks:
+      - proxy-net

@@ -1,5 +1,6 @@
 "use client"
 
+import axios from "axios";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -52,7 +53,6 @@ export default function MechanicClient({ id }: MechanicClientProps) {
     const [repairs, setRepairs] = useState<Repair[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isSheetLoading, setIsSheetLoading] = useState<boolean>(false);
-    const [open, setOpen] = useState<boolean>(false);
     const [openSheet, setOpenSheet] = useState<boolean>(false);
 
     async function getMechanic() {
@@ -69,8 +69,10 @@ export default function MechanicClient({ id }: MechanicClientProps) {
                 email: mechanicData.email
             });
         } catch (error) {
-            if (error.response.status == 404) {
-                setErrormessage(error.response.data);
+            if (axios.isAxiosError(error)) {
+                if (error?.response?.status == 404) {
+                    setErrormessage(error.response.data);
+                }
             }
         }
     }
@@ -98,8 +100,10 @@ export default function MechanicClient({ id }: MechanicClientProps) {
 
             setRepairs(repairsWithDetails);
         } catch (error) {
-            if (error.response.status == 404) {
-                setErrormessage(error.response.data);
+            if (axios.isAxiosError(error)) {
+                if (error?.response?.status == 404) {
+                    setErrormessage(error.response.data);
+                }
             }
         } finally {
             setIsLoading(false);

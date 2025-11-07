@@ -1,5 +1,6 @@
 "use client"
 
+import axios from "axios"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -7,7 +8,6 @@ import { Button } from "@/components/ui/button"
 import {
     Form,
     FormControl,
-    FormDescription,
     FormField,
     FormItem,
     FormLabel,
@@ -16,7 +16,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { AxiosError } from "axios"
 
 import { useJwt } from "../../contexts/JwtContext"
 import { auth } from "@/lib/auth"
@@ -57,8 +56,11 @@ export default function Login() {
             setRole(response.role);
             setLogged(true);
             router.push("/");
-        } catch (error: AxiosError) {
-            setError(error.response.data.message);
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error))
+                setError(error.response?.data?.message);
+            else
+                setError("Unknown error");
         }
     }
 

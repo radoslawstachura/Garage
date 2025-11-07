@@ -1,7 +1,6 @@
 "use client"
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 
 import { auth } from '@/lib/auth';
 
@@ -19,8 +18,6 @@ export const JwtProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const [username, setUsername] = useState<string | null>(null);
     const [role, setRole] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
-
-    const router = useRouter();
 
     const refreshAccessToken = async () => {
         const userObject = await auth.refreshAccessToken();

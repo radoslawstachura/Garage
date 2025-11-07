@@ -10,7 +10,6 @@ services:
     env_file:
       - ./.env
     networks:
-      - public-net
       - cars-net
     depends_on:
       - cars-postgres

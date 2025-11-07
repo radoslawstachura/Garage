@@ -1,10 +1,10 @@
 "use client"
 
+import axios from "axios";
 import { useEffect, useState } from "react";
 import { z } from "zod";
-import { useForm, Resolver } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -57,8 +57,12 @@ export default function RepairClient({ id }: RepairClientProps) {
 
                 repairData.carData = carData;
             } catch (error) {
-                if (error.response.status == 404) {
-                    setErrormessage(error.response.data);
+                if (axios.isAxiosError(error)) {
+                    if (error?.response?.status == 404) {
+                        setErrormessage(error.response.data);
+                    }
+                } else {
+                    console.log(error);
                 }
             }
 
@@ -69,8 +73,12 @@ export default function RepairClient({ id }: RepairClientProps) {
 
                 repairData.mechanicData = mechanicData;
             } catch (error) {
-                if (error.response.status == 404) {
-                    setErrormessage(error.response.data);
+                if (axios.isAxiosError(error)) {
+                    if (error?.response?.status == 404) {
+                        setErrormessage(error.response.data);
+                    }
+                } else {
+                    console.log(error);
                 }
             }
 
@@ -88,8 +96,12 @@ export default function RepairClient({ id }: RepairClientProps) {
                 status: repairData.status
             });
         } catch (error) {
-            if (error.response.status == 404) {
-                setErrormessage(error.response.data);
+            if (axios.isAxiosError(error)) {
+                if (error?.response?.status == 404) {
+                    setErrormessage(error.response.data);
+                }
+            } else {
+                console.log(error);
             }
         }
     }
@@ -100,7 +112,7 @@ export default function RepairClient({ id }: RepairClientProps) {
 
             setMechanics(mechanicsData);
         } catch (error) {
-            console.log(error.response.data.message);
+            console.log(error);
         }
     }
 
@@ -110,7 +122,7 @@ export default function RepairClient({ id }: RepairClientProps) {
 
             setCars(carsData);
         } catch (error) {
-            console.log(error.response.data.message);
+            console.log(error);
         }
     }
 

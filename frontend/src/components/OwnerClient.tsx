@@ -1,12 +1,12 @@
 "use client"
 
+import axios from "axios";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
     Form,
@@ -53,7 +53,6 @@ export default function OwnerClient({ id }: OwnerClientProps) {
     const [cars, setCars] = useState<Car[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isSheetLoading, setIsSheetLoading] = useState<boolean>(false);
-    const [open, setOpen] = useState<boolean>(false);
     const [openSheet, setOpenSheet] = useState<boolean>(false);
 
     const { role } = useJwt();
@@ -102,8 +101,12 @@ export default function OwnerClient({ id }: OwnerClientProps) {
                 email: ownerData.email
             });
         } catch (error) {
-            if (error.response.status == 404) {
-                setErrormessage(error.response.data);
+            if (axios.isAxiosError(error)) {
+                if (error?.response?.status == 404) {
+                    setErrormessage(error.response.data);
+                }
+            } else {
+                console.log(error);
             }
         }
     }
@@ -117,8 +120,12 @@ export default function OwnerClient({ id }: OwnerClientProps) {
             setCars(carsData);
             setIsLoading(false);
         } catch (error) {
-            if (error.response.status == 404) {
-                setErrormessage(error.response.data);
+            if (axios.isAxiosError(error)) {
+                if (error?.response?.status == 404) {
+                    setErrormessage(error.response.data);
+                }
+            } else {
+                console.log(error);
             }
         }
     }

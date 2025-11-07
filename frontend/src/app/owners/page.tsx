@@ -34,7 +34,6 @@ const formSchema = z.object({
 
 export default function Owners() {
     const [owners, setOwners] = useState<Owner[]>([]);
-    const [error, setError] = useState<string>("");
     const [open, setOpen] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -72,7 +71,7 @@ export default function Owners() {
 
             setOpen(false);
         } catch (error) {
-            console.log(error.response.data);
+            console.log(error);
         }
     }
 

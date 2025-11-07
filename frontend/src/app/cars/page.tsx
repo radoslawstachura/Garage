@@ -21,7 +21,6 @@ import {
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Trash2 } from "lucide-react";
 
 import { Car } from "@/types/Car";
 import { Owner } from "@/types/Owner";
@@ -41,7 +40,6 @@ export default function Cars() {
     const [cars, setCars] = useState<Car[]>([]);
     const [owners, setOwners] = useState<Owner[]>([]);
     const [filter, setFilter] = useState<string>("all");
-    const [error, setError] = useState<string>("");
     const [open, setOpen] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -87,7 +85,7 @@ export default function Cars() {
 
             //setCars(carsWithDetails);
         } catch (error) {
-            setError(error.response.data.message);
+            console.log(error);
         }
     }
 
@@ -97,7 +95,7 @@ export default function Cars() {
 
             setOwners(ownersData);
         } catch (error) {
-            setError(error.response.data.message);
+            console.log(error);
         }
     }
 
@@ -130,7 +128,7 @@ export default function Cars() {
 
             setOpen(false);
         } catch (error) {
-            console.log(error.response.data);
+            console.log(error);
         }
     }
 

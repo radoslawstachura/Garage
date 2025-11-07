@@ -27,32 +27,38 @@ async function request<T>(config: AxiosRequestConfig): Promise<T> {
         await sleep(1000);
 
         return response.data;
-    } catch (error: any) {
-        if (error.response?.status === 401) {
-            const newToken = await auth.refreshAccessToken();
+    } catch (error: unknown) {
+        if (axios.isAxiosError(error)) {
+            if (error.response?.status === 401) {
+                const newToken = await auth.refreshAccessToken();
 
-            if (newToken) {
-                const retryResponse: AxiosResponse<T> = await axios({
-                    ...config,
-                    baseURL: BASE_URL,
-                    headers: {
-                        ...headers,
-                        Authorization: `Bearer ${newToken}`,
-                    },
-                    withCredentials: true,
-                });
-                await sleep(1000);
+                if (newToken) {
+                    const retryResponse: AxiosResponse<T> = await axios({
+                        ...config,
+                        baseURL: BASE_URL,
+                        headers: {
+                            ...headers,
+                            Authorization: `Bearer ${newToken}`,
+                        },
+                        withCredentials: true,
+                    });
+                    await sleep(1000);
 
-                return retryResponse.data;
+                    return retryResponse.data;
+                }
             }
+            throw error;
+        } else {
+            throw new Error("Unexpected error in request");
         }
-        throw error;
     }
 }
 
 export const apiClient = {
-    get: <T>(url: string, config: AxiosRequestConfig = {}) =>
-        request<T>({ ...config, method: 'GET', url }),
+    get: <T>(url: string, config: AxiosRequestConfig = {}) => {
+        console.log(BASE_URL + url);
+        return request<T>({ ...config, method: 'GET', url })
+    },
 
     post: <T>(url: string, data?: unknown, config: AxiosRequestConfig = {}) =>
         request<T>({ ...config, method: 'POST', url, data }),

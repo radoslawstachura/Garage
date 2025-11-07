@@ -22,7 +22,7 @@ export default function Header() {
             setRole(null);
             router.push("/login");
         } catch (error) {
-            console.log(error.response.data);
+            console.log(error);
         }
     }
 
@@ -48,6 +48,9 @@ export default function Header() {
                 </Link>
                 <Link href="/owners">
                     <Button variant="ghost" className="text-white mx-2 cursor-pointer">Owners</Button>
+                </Link>
+                <Link href="/calendar">
+                    <Button variant="ghost" className="text-white mx-2 cursor-pointer">Calendar</Button>
                 </Link>
             </div>
             <div>

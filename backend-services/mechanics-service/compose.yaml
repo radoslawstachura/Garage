@@ -10,7 +10,6 @@ services:
     env_file:
       - ./.env
     networks:
-      - public-net
       - mechanics-net
     depends_on:
       - mechanics-postgres

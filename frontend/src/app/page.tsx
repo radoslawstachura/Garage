@@ -20,22 +20,11 @@ import {
 } from "recharts";
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  CompactCard,
-  CompactCardAction,
-  CompactCardContent,
-  CompactCardDescription,
-  CompactCardFooter,
-  CompactCardHeader,
-  CompactCardTitle,
-} from "@/components/CompactCard";
 import {
   Table,
   TableBody,
@@ -82,6 +71,7 @@ import { Trophy } from "lucide-react";
 import { toast } from "sonner";
 
 import { FormCombobox } from "@/components/FormCombobox";
+import { RepairsCalendar } from "@/components/RepairsCalendar";
 import { apiClient } from "@/lib/apiClient";
 import { Car } from "@/types/Car";
 import { Mechanic } from "@/types/Mechanic";
@@ -137,15 +127,13 @@ export default function Home() {
   const [created, setCreated] = useState<number>(0);
   const [inProgress, setInProgress] = useState<number>(0);
   const [completed, setCompleted] = useState<number>(0);
-  const [revenue, setRevenue] = useState<number>(0);
+  //const [revenue, setRevenue] = useState<number>(0);
   const [incomeData, setIncomeData] = useState<Income[]>([]);
   const [repairsPerMonth, setRepairsPerMonth] = useState<RepairsPerMonth[]>([]);
   const [status, setStatus] = useState<string>("all");
   const [sort, setSort] = useState<string>("");
   const [direction, setDirection] = useState<boolean>(true);
   const [open, setOpen] = useState<boolean>(false);
-  const [carSelectOpen, setCarSelectOpen] = useState<boolean>(false);
-  const [mechanicSelectOpen, setMechanicSelectOpen] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isDialogLoading, setIsDialogLoading] = useState<boolean>(false);
   const [pieChartData, setPieChartData] = useState<Array<object>>([]);
@@ -159,73 +147,6 @@ export default function Home() {
       ]);
     }
   }, [created, inProgress, completed]);
-
-  const staticCharts = [
-    // {
-    //   type: "area",
-    //   title: "Liczba napraw w miesiącu",
-    //   data: [
-    //     { label: "Sty", value: 42 },
-    //     { label: "Lut", value: 38 },
-    //     { label: "Mar", value: 50 },
-    //     { label: "Kwi", value: 47 },
-    //     { label: "Maj", value: 52 },
-    //     { label: "Cze", value: 60 },
-    //     { label: "Lip", value: 55 },
-    //     { label: "Sie", value: 63 },
-    //     { label: "Wrz", value: 59 },
-    //     { label: "Paź", value: 65 },
-    //     { label: "Lis", value: 58 },
-    //     { label: "Gru", value: 70 },
-    //   ],
-    //   color: "#4F46E5",
-    // },
-    // {
-    //   type: "area",
-    //   title: "Przychód (ostatnie 12 miesięcy)",
-    //   data: [
-    //     { label: "Sty", value: 8200 },
-    //     { label: "Lut", value: 7600 },
-    //     { label: "Mar", value: 9000 },
-    //     { label: "Kwi", value: 8700 },
-    //     { label: "Maj", value: 9500 },
-    //     { label: "Cze", value: 10400 },
-    //     { label: "Lip", value: 9800 },
-    //     { label: "Sie", value: 11200 },
-    //     { label: "Wrz", value: 10700 },
-    //     { label: "Paź", value: 11600 },
-    //     { label: "Lis", value: 10900 },
-    //     { label: "Gru", value: 12200 },
-    //   ],
-    //   color: "#16A34A",
-    // },
-    // {
-    //   type: "bar",
-    //   title: "Czas pracy mechaników (h)",
-    //   data: [
-    //     { label: "Pon", value: 32 },
-    //     { label: "Wt", value: 28 },
-    //     { label: "Śr", value: 40 },
-    //     { label: "Czw", value: 30 },
-    //     { label: "Pt", value: 22 },
-    //     { label: "Sob", value: 15 },
-    //   ],
-    //   color: "#F59E0B",
-    // },
-    // {
-    //   type: "bar",
-    //   title: "Średni koszt naprawy",
-    //   data: [
-    //     { label: "Pon", value: 320 },
-    //     { label: "Wt", value: 290 },
-    //     { label: "Śr", value: 340 },
-    //     { label: "Czw", value: 310 },
-    //     { label: "Pt", value: 270 },
-    //     { label: "Sob", value: 250 },
-    //   ],
-    //   color: "#EF4444",
-    // },
-  ];
 
   const { role } = useJwt();
 
@@ -264,9 +185,9 @@ export default function Home() {
       setInProgress(repairsData.filter(r => r.status == "in progress").length);
       setCompleted(repairsData.filter(r => r.status == "finished").length);
 
-      setRevenue(repairsData.reduce((sum, r) => sum + Number(r.cost), 0));
+      //setRevenue(repairsData.reduce((sum, r) => sum + Number(r.cost), 0));
     } catch (error) {
-      setError(error.response.data.message);
+      console.log(error);
     }
   }
 
@@ -276,7 +197,7 @@ export default function Home() {
 
       setCars(carsData);
     } catch (error) {
-      console.log(error.response.data.message);
+      console.log(error);
     }
   }
 
@@ -286,7 +207,7 @@ export default function Home() {
 
       setMechanics(mechanicsData);
     } catch (error) {
-      console.log(error.response.data.message);
+      console.log(error);
     }
   }
 
@@ -355,11 +276,11 @@ export default function Home() {
       setOpen(false);
       setIsDialogLoading(false);
     } catch (error) {
-      console.log(error.response.data);
+      console.log(error);
     }
   }
 
-  async function deleteRepairSubmit(id: number) {
+  async function deleteRepairSubmit() {
     // try {
     //   await apiClient.delete("/repairs");
     // } catch(error) {
@@ -403,10 +324,6 @@ export default function Home() {
   //   if(sort == "registration_number")
   //     filteredRepairs.sort((a, b) => a.carData?.registration_number)
   // }, [sort, direction]);
-
-  const displayedRepairs = repairs.filter(
-    r => status === "all" || r.status === status
-  );
   const loading = isLoading || repairs.length === 0;
 
   const repairsPerMechanic = (mechanics.length && repairs.length)
@@ -444,7 +361,6 @@ export default function Home() {
   }));
 
   const allCharts = [
-    ...staticCharts,
     {
       type: "area",
       title: "Przychód (ostatnie 12 miesięcy)",
@@ -545,6 +461,7 @@ export default function Home() {
       {/* {
         filteredRepairs.length > 0 && */}
       <div>{String(isLoading)}</div>
+      <p>sigma123</p>
       <div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
@@ -1175,7 +1092,7 @@ export default function Home() {
                         </span>
                       </TableCell>
                       <TableCell className="px-3 py-2 text-right">
-                        <span onClick={() => deleteRepairSubmit(repair.repair_id)}
+                        <span onClick={() => deleteRepairSubmit()}
                           className="bg-[#fee2e2] text-[#dc2626] px-3 py-1 rounded-md text-sm font-medium 
                  hover:bg-[#fecaca] hover:text-[#991b1b] cursor-pointer transition-colors"
                         >
@@ -1189,6 +1106,10 @@ export default function Home() {
             )}
           </TableBody>
         </Table>
+        <RepairsCalendar
+          repairs={repairs}
+          mechanics={mechanics}
+        ></RepairsCalendar>
       </div>
       {/* } */}
       {/* {

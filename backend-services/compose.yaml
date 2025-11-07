@@ -16,7 +16,7 @@ services:
     ports:
       - 8080:80
     networks:
-      - public-net
+      - proxy-net
     depends_on:
       - cars
       - mechanics
@@ -35,4 +35,4 @@ services:
       - user-net
 
 networks:
-  public-net:
+  proxy-net:

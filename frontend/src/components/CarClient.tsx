@@ -1,5 +1,6 @@
 "use client"
 
+import axios from "axios";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { useForm, Resolver } from "react-hook-form";
@@ -56,7 +57,6 @@ interface CarClientProps {
 
 export default function CarClient({ id }: CarClientProps) {
     const [car, setCar] = useState<Car | null>(null);
-    const [errorMessage, setErrorMessage] = useState<string>("");
     const [repairs, setRepairs] = useState<Repair[]>([]);
     const [owners, setOwners] = useState<Owner[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -107,14 +107,22 @@ export default function CarClient({ id }: CarClientProps) {
                     owner_id: carData.owner_id,
                     vin: carData.vin ?? ""
                 });
-            } catch (error) {
-                if (error.response.status == 404) {
-                    setErrorMessage(error.response.data);
+            } catch (error: unknown) {
+                if (axios.isAxiosError(error)) {
+                    if (error?.response?.status == 404) {
+                        console.log(error.response.data);
+                    }
+                } else {
+                    console.log(error);
                 }
             }
         } catch (error) {
-            if (error.response.status == 404) {
-                setErrorMessage(error.response.data);
+            if (axios.isAxiosError(error)) {
+                if (error?.response?.status == 404) {
+                    console.log(error.response.data);
+                }
+            } else {
+                console.log(error);
             }
         }
     }
@@ -142,8 +150,12 @@ export default function CarClient({ id }: CarClientProps) {
 
             setRepairs(repairsWithDetails);
         } catch (error) {
-            if (error.response.status == 404) {
-                setErrorMessage(error.response.data);
+            if (axios.isAxiosError(error)) {
+                if (error?.response?.status == 404) {
+                    console.log(error.response.data);
+                }
+            } else {
+                console.log(error);
             }
         } finally {
             setIsLoading(false);
@@ -156,7 +168,7 @@ export default function CarClient({ id }: CarClientProps) {
 
             setOwners(ownersData);
         } catch (error) {
-            setError(error.response.data.message);
+            console.log(error);
         }
     }
 

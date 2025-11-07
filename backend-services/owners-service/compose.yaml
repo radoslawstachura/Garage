@@ -10,7 +10,6 @@ services:
     env_file:
       - ./.env
     networks:
-      - public-net
       - owners-net
     depends_on:
       - owners-postgres

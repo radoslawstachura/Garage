@@ -43,7 +43,6 @@ export default function Repairs() {
     const [repairs, setRepairs] = useState<Repair[]>([]);
     const [cars, setCars] = useState<Car[]>([]);
     const [mechanics, setMechanics] = useState<Mechanic[]>([]);
-    const [error, setError] = useState<string>("");
     const [open, setOpen] = useState<boolean>(false);
 
     async function getRepairs() {
@@ -75,7 +74,7 @@ export default function Repairs() {
                 }
             });
         } catch (error) {
-            setError(error.response.data.message);
+            console.log(error);
         }
     }
 
@@ -85,7 +84,7 @@ export default function Repairs() {
 
             setCars(carsData);
         } catch (error) {
-            console.log(error.response.data.message);
+            console.log(error);
         }
     }
 
@@ -95,7 +94,7 @@ export default function Repairs() {
 
             setMechanics(mechanicsData);
         } catch (error) {
-            console.log(error.response.data.message);
+            console.log(error);
         }
     }
 
@@ -126,7 +125,7 @@ export default function Repairs() {
 
             setOpen(false);
         } catch (error) {
-            console.log(error.response.data);
+            console.log(error);
         }
     }
 

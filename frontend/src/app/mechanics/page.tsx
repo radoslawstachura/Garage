@@ -10,14 +10,8 @@ import {
     ResponsiveContainer,
     BarChart,
     Bar,
-    AreaChart,
-    Area,
     XAxis,
     Tooltip,
-    PieChart,
-    Pie,
-    Cell,
-    Legend,
 } from "recharts";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,7 +44,6 @@ const formSchema = z.object({
 export default function Mechanics() {
     const [mechanics, setMechanics] = useState<Mechanic[]>([]);
     const [repairs, setRepairs] = useState<Repair[]>([]);
-    const [error, setError] = useState<string>("");
     const [open, setOpen] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -64,7 +57,7 @@ export default function Mechanics() {
 
             setIsLoading(false);
         } catch (error) {
-            setError(error.response.data.message);
+            console.log(error);
         }
     }
 
@@ -78,7 +71,7 @@ export default function Mechanics() {
 
             setIsLoading(false);
         } catch (error) {
-            setError(error.response.data.message);
+            console.log(error);
         }
     }
 
@@ -105,7 +98,7 @@ export default function Mechanics() {
 
             setOpen(false);
         } catch (error) {
-            console.log(error.response.data);
+            console.log(error);
         }
     }
 
