@@ -11,6 +11,8 @@ import { JwtProvider } from "../contexts/JwtContext";
 
 import Header from "@/components/Header";
 import { Toaster } from "@/components/ui/sonner";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/app-sidebar";
 
 NProgress.configure({ showSpinner: false });
 
@@ -30,8 +32,12 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <JwtProvider>
-          <Header></Header>
-          {children}
+          <SidebarProvider>
+            {/* <Header></Header> */}
+            <AppSidebar></AppSidebar>
+            <SidebarTrigger />
+            {children}
+          </SidebarProvider>
           <Toaster
             richColors
             closeButton

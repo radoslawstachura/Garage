@@ -8,6 +8,7 @@ services:
         ports:
             - 3011:80
         env_file:
+            - ../.env
             - ./.env
         networks:
             - statistics-net
