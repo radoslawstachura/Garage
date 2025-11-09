@@ -461,7 +461,7 @@ export default function Home() {
       {/* {
         filteredRepairs.length > 0 && */}
       <div>{String(isLoading)}</div>
-      <p>sigma123</p>
+      <p>sigma</p>
       <div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>

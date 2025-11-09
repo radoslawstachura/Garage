@@ -3,17 +3,12 @@ include:
 
 services:
   frontend:
-    env_file:
-      - ./frontend/.env.docker
     build:
       context: ./frontend
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile.prod
       args:
         NEXT_PUBLIC_BACKEND_URL: ${NEXT_PUBLIC_BACKEND_URL}
     ports:
       - 5000:3000
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
     depends_on:
       - reverse-proxy
