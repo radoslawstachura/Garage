@@ -4,27 +4,28 @@ import { useJwt } from "@/contexts/JwtContext";
 import Link from "next/link";
 import { Button } from "./ui/button";
 import { useRouter } from "next/navigation";
+import { SidebarTrigger } from "./ui/sidebar";
 
 import { auth } from "@/lib/auth";
 import { apiClient } from "@/lib/apiClient";
 
 export default function Header() {
-    const { username, setUsername, role, setRole } = useJwt();
+    // const { username, setUsername, role, setRole } = useJwt();
 
-    const router = useRouter();
+    // const router = useRouter();
 
-    async function logout() {
-        try {
-            await apiClient.post("/user/logout");
+    // async function logout() {
+    //     try {
+    //         await apiClient.post("/user/logout");
 
-            auth.clearAccessToken();
-            setUsername(null);
-            setRole(null);
-            router.push("/login");
-        } catch (error) {
-            console.log(error);
-        }
-    }
+    //         auth.clearAccessToken();
+    //         setUsername(null);
+    //         setRole(null);
+    //         router.push("/login");
+    //     } catch (error) {
+    //         console.log(error);
+    //     }
+    // }
 
     return (
         <nav style={{
@@ -33,7 +34,13 @@ export default function Header() {
             padding: "10px 20px",
             justifyContent: "space-between"
         }}>
-            <div>
+            {/* MOBILE */}
+            <div className="flex items-center md:hidden">
+                <SidebarTrigger className="p-2 rounded-md text-white" />
+            </div>
+
+            {/* DESKTOP */}
+            <div className="hidden md:flex items-center">
                 <Link href="/">
                     <Button variant="ghost" className="text-white mx-2 cursor-pointer">Dashboard</Button>
                 </Link>
@@ -53,7 +60,12 @@ export default function Header() {
                     <Button variant="ghost" className="text-white mx-2 cursor-pointer">Calendar</Button>
                 </Link>
             </div>
-            <div>
+
+            <div className="flex items-center">
+                <span className="text-white font-bold text-lg">Garage Name</span>
+            </div>
+
+            {/* <div>
                 <span className="text-white">role: {role}</span>
                 {!username &&
                     <Link href="/login">
@@ -66,7 +78,7 @@ export default function Header() {
                         <Button onClick={logout} variant="ghost" className="text-white mx-2 cursor-pointer">Logout</Button>
                     </>
                 }
-            </div>
+            </div> */}
         </nav>
     );
 }

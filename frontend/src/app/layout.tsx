@@ -33,11 +33,21 @@ export default function RootLayout({
       <body>
         <JwtProvider>
           <SidebarProvider>
-            {/* <Header></Header> */}
+            <div className="flex min-h-screen w-full">
+              <AppSidebar />
+              <main className="flex-1">
+                <Header></Header>
+                {children}
+              </main>
+            </div>
+          </SidebarProvider>
+
+          {/* <SidebarProvider>
+            <Header></Header>
             <AppSidebar></AppSidebar>
             <SidebarTrigger />
             {children}
-          </SidebarProvider>
+          </SidebarProvider> */}
           <Toaster
             richColors
             closeButton
