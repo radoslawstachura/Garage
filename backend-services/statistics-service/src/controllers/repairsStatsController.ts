@@ -13,14 +13,23 @@ export const getIncomeMonthly = async (req: Request, res: Response, next: NextFu
             "income:monthly",
             async () => {
                 const result = await repairsPool.query(`
+                    WITH months AS (
+                        SELECT
+                            generate_series(
+                                date_trunc('month', CURRENT_DATE) - INTERVAL '12 months',
+                                date_trunc('month', CURRENT_DATE) - INTERVAL '1 month',
+                                INTERVAL '1 month'
+                            ) AS month_start
+                    )
                     SELECT
-                        EXTRACT(MONTH FROM date) as month,
-                        EXTRACT(YEAR FROM date) as year,
-                        SUM(cost) as "totalIncome"
-                    FROM repairs
-                    WHERE date >= date_trunc('month', CURRENT_DATE) - INTERVAL '12 months'
-                    GROUP BY month, year
-                    ORDER BY year, month;
+                        EXTRACT(MONTH FROM m.month_start) AS month,
+                        EXTRACT(YEAR FROM m.month_start) AS year,
+                        COALESCE(SUM(r.cost), 0) AS "totalIncome"
+                    FROM months m
+                    LEFT JOIN repairs r
+                        ON date_trunc('month', r.date) = m.month_start
+                    GROUP BY m.month_start
+                    ORDER BY m.month_start;
                 `);
 
                 return result.rows;
@@ -40,14 +49,23 @@ export const getRepairsMonthly = async (req: Request, res: Response, next: NextF
             "repairs:monthly",
             async () => {
                 const result = await repairsPool.query(`
+                    WITH months AS (
+                        SELECT
+                            generate_series(
+                                date_trunc('month', CURRENT_DATE) - INTERVAL '12 months',
+                                date_trunc('month', CURRENT_DATE) - INTERVAL '1 month',
+                                INTERVAL '1 month'
+                            ) AS month_start
+                    )
                     SELECT
-                        EXTRACT(MONTH FROM date) as month,
-                        EXTRACT(YEAR FROm date) as year,
-                        COUNT(repair_id) as repair_count
-                    FROM repairs
-                    WHERE date >= date_trunc('month', CURRENT_DATE) - INTERVAL '12 months'
-                    GROUP BY month, year
-                    ORDER BY year, month;
+                        EXTRACT(MONTH FROM m.month_start) AS month,
+                        EXTRACT(YEAR FROM m.month_start) AS year,
+                        COALESCE(COUNT(repair_id), 0) AS "repair_count"
+                    FROM months m
+                    LEFT JOIN repairs r
+                        ON date_trunc('month', r.date) = m.month_start
+                    GROUP BY m.month_start
+                    ORDER BY m.month_start;
                 `);
 
                 return result.rows;

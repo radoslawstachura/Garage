@@ -50,9 +50,9 @@ export default function Header() {
                 <Link href="/mechanics">
                     <Button variant="ghost" className="text-white mx-2 cursor-pointer">Mechanics</Button>
                 </Link>
-                <Link href="/repairs">
+                {/* <Link href="/repairs">
                     <Button variant="ghost" className="text-white mx-2 cursor-pointer">Repairs</Button>
-                </Link>
+                </Link> */}
                 <Link href="/owners">
                     <Button variant="ghost" className="text-white mx-2 cursor-pointer">Owners</Button>
                 </Link>

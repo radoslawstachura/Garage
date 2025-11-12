@@ -55,10 +55,8 @@ async function request<T>(config: AxiosRequestConfig): Promise<T> {
 }
 
 export const apiClient = {
-    get: <T>(url: string, config: AxiosRequestConfig = {}) => {
-        console.log(BASE_URL + url);
-        return request<T>({ ...config, method: 'GET', url })
-    },
+    get: <T>(url: string, config: AxiosRequestConfig = {}) =>
+        request<T>({ ...config, method: 'GET', url }),
 
     post: <T>(url: string, data?: unknown, config: AxiosRequestConfig = {}) =>
         request<T>({ ...config, method: 'POST', url, data }),

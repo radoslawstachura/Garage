@@ -86,6 +86,8 @@ export default function CarClient({ id }: CarClientProps) {
 
     async function getCar() {
         try {
+            setIsLoading(true);
+
             const carData = await apiClient.get<Car>(`/cars/${id}`);
 
             carData.ownerData = null;
@@ -124,6 +126,8 @@ export default function CarClient({ id }: CarClientProps) {
             } else {
                 console.log(error);
             }
+        } finally {
+            setIsLoading(false);
         }
     }
 

@@ -118,7 +118,7 @@ export function RepairsCalendar({ repairs, mechanics }: RepairsCalendarProps) {
                                     ))
                                 ) : (
                                     <p className="text-xs text-gray-400 italic text-center mt-4">
-                                        Brak napraw
+                                        No repairs
                                     </p>
                                 )}
                             </div>
@@ -126,6 +126,10 @@ export function RepairsCalendar({ repairs, mechanics }: RepairsCalendarProps) {
                     );
                 })}
             </div>
+            <pre>
+                {JSON.stringify(repairs, null, 2)}
+                {JSON.stringify(mechanics, null, 2)}
+            </pre>
         </div>
     );
 }

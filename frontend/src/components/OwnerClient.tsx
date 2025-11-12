@@ -33,7 +33,7 @@ import { Car } from "@/types/Car";
 import { apiClient } from "@/lib/apiClient";
 import { Skeleton } from "./ui/skeleton";
 import { useJwt } from "@/contexts/JwtContext";
-import CarSkeleton from "./CarSkeleton";
+import CarSkeleton from "./skeletons/CarSkeleton";
 
 type OwnerClientProps = {
     id: number;

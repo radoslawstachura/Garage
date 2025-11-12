@@ -37,11 +37,11 @@ const items = [
         url: "/mechanics",
         icon: Wrench,
     },
-    {
-        title: "Repairs",
-        url: "/repairs",
-        icon: Hammer,
-    },
+    // {
+    //     title: "Repairs",
+    //     url: "/repairs",
+    //     icon: Hammer,
+    // },
     {
         title: "Owners",
         url: "/owners",

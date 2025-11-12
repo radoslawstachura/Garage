@@ -17,6 +17,7 @@ import {
   Pie,
   Cell,
   Legend,
+  YAxis,
 } from "recharts";
 import {
   Card,
@@ -57,6 +58,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -72,11 +78,14 @@ import { toast } from "sonner";
 
 import { FormCombobox } from "@/components/FormCombobox";
 import { RepairsCalendar } from "@/components/RepairsCalendar";
+import { RepairsCalendarSkeleton } from "@/components/skeletons/RepairsCalendarSkeleton";
 import { apiClient } from "@/lib/apiClient";
 import { Car } from "@/types/Car";
 import { Mechanic } from "@/types/Mechanic";
 import { Repair } from "@/types/Repair";
 import { useJwt } from "@/contexts/JwtContext";
+import { PieChartSkeleton } from "@/components/skeletons/PieChartSkeleton";
+import { AreaChartSkeleton } from "@/components/skeletons/AreaChartSkeleton";
 
 const formSchema = z.object({
   car_id: z.string().regex(/\b[0-9]+\b/),
@@ -163,7 +172,7 @@ export default function Home() {
 
       setRepairs(repairsWithPlaceholders);
 
-      repairsWithPlaceholders.forEach(async (repair, index) => {
+      repairsWithPlaceholders.forEach(async (repair) => {
         try {
           const [carData, mechanicData] = await Promise.all([
             apiClient.get<Car>(`/cars/${repair.car_id}`),
@@ -171,8 +180,10 @@ export default function Home() {
           ]);
 
           setRepairs(currentRepairs =>
-            currentRepairs.map((r, i) =>
-              i === index ? { ...r, carData, mechanicData } : r
+            currentRepairs.map((r) =>
+              r.repair_id === repair.repair_id
+                ? { ...r, carData, mechanicData }
+                : r
             )
           );
         } catch (error) {
@@ -352,7 +363,7 @@ export default function Home() {
 
   const incomeChartData = incomeData.map((item) => ({
     label: item.month >= 10 ? `${item.month}.${item.year}` : `0${item.month}.${item.year}`,
-    value: item.totalIncome,
+    value: Number(item.totalIncome),
   }));
 
   const repairsChartData = repairsPerMonth.map((item) => ({
@@ -460,8 +471,7 @@ export default function Home() {
       </div> */}
       {/* {
         filteredRepairs.length > 0 && */}
-      <div>{String(isLoading)}</div>
-      <p>sigma</p>
+      <p>{incomeChartData.length > 0 && repairsChartData.length > 0}</p>
       <div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
@@ -643,7 +653,9 @@ export default function Home() {
             <CardDescription>Procentowy podział wszystkich napraw</CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center items-center">
-            {pieChartData &&
+            {pieChartData.length === 0 ? (
+              <PieChartSkeleton />
+            ) : (
               <ResponsiveContainer width="100%" height={260}>
                 <PieChart>
                   <Pie
@@ -674,7 +686,7 @@ export default function Home() {
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>
-            }
+            )}
           </CardContent>
         </Card>
 
@@ -721,8 +733,8 @@ export default function Home() {
         </div>
       </div>
       {/* === CHARTS SECTION === */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6">
-        {allCharts.map((chart, i) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
+        {incomeChartData.length > 0 && repairsChartData.length > 0 ? (allCharts.map((chart, i) => (
           <Card
             key={i}
             className="shadow-md hover:shadow-lg transition-all duration-300 border border-gray-200"
@@ -755,7 +767,7 @@ export default function Home() {
                             y={y + 15}
                             textAnchor="middle"
                             fill="#4b5563"
-                            fontSize={12}
+                            fontSize={9}
                             opacity={isVisible ? 1 : 0}
                           >
                             {isVisible ? payload.value : ""}
@@ -763,6 +775,8 @@ export default function Home() {
                         );
                       }}
                     />
+
+                    <YAxis hide={false} tick={{ fontSize: 12, fill: "#4b5563" }} />
 
                     <Tooltip
                       cursor={{ stroke: "rgba(0, 0, 0, 0.1)" }}
@@ -807,7 +821,11 @@ export default function Home() {
 
             </CardContent>
           </Card>
-        ))}
+        ))) : (
+          allCharts.map((_chart, i) => (
+            <AreaChartSkeleton key={i} />
+          ))
+        )}
       </div>
       <div style={{
         height: "32px"
@@ -1037,12 +1055,33 @@ export default function Home() {
                   </TableCell>
                   <TableCell className="px-3 py-2 text-sm">
                     {repair.carData ? (
-                      <Link
-                        href={`/car/${repair.car_id}`}
-                        className="underline text-blue-600 hover:text-blue-800"
-                      >
-                        {repair.carData.registration_number}
-                      </Link>
+                      // <Link
+                      //   href={`/car/${repair.car_id}`}
+                      //   className="underline text-blue-600 hover:text-blue-800"
+                      // >
+                      //   {repair.carData.registration_number}
+                      // </Link>
+                      <Popover>
+                        <PopoverTrigger className="underline text-blue-600 hover:text-blue-800 cursor-pointer">
+                          {repair.carData.registration_number}
+                        </PopoverTrigger>
+                        <PopoverContent className="p-3 w-64 text-sm space-y-1">
+                          <div><span className="font-semibold">Brand:</span> {repair.carData.brand}</div>
+                          <div><span className="font-semibold">Model:</span> {repair.carData.model}</div>
+                          <div><span className="font-semibold">Production Year:</span> {repair.carData.production_year}</div>
+                          <div><span className="font-semibold">Mileage:</span> {repair.carData.mileage.toLocaleString()} km</div>
+                          <div><span className="font-semibold">VIN:</span> {repair.carData.vin ?? "N/A"}</div>
+                          <div><span className="font-semibold">Last Update:</span> {new Date(repair.carData.last_update_date).toLocaleDateString()}</div>
+                          <div className="mt-2">
+                            <Link
+                              href={`/car/${repair.car_id}`}
+                              className="underline text-blue-600 hover:text-blue-800"
+                            >
+                              Details
+                            </Link>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
                     ) : (
                       <Skeleton className="h-4 w-24 rounded-md bg-gray-300 animate-pulse" />
                     )}
@@ -1106,11 +1145,15 @@ export default function Home() {
             )}
           </TableBody>
         </Table>
+      </div>
+      {repairs.length > 0 ? (
         <RepairsCalendar
           repairs={repairs}
           mechanics={mechanics}
         ></RepairsCalendar>
-      </div>
+      ) : (
+        <RepairsCalendarSkeleton />
+      )}
       {/* } */}
       {/* {
         !filteredRepairs.length &&

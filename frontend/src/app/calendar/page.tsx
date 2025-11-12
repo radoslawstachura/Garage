@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 
 import { RepairsCalendar } from "@/components/RepairsCalendar";
+import { RepairsCalendarSkeleton } from "@/components/skeletons/RepairsCalendarSkeleton";
+
 import { apiClient } from "@/lib/apiClient";
 
 import { Repair } from "@/types/Repair";
@@ -25,16 +27,24 @@ export default function Calendar() {
 
             setRepairs(repairsWithPlaceholders);
 
-            repairsWithPlaceholders.forEach(async (repair, index) => {
+            repairsWithPlaceholders.forEach(async (repair) => {
                 try {
                     const [carData, mechanicData] = await Promise.all([
                         apiClient.get<Car>(`/cars/${repair.car_id}`),
                         apiClient.get<Mechanic>(`/mechanics/${repair.mechanic_id}`)
                     ]);
 
+                    // setRepairs(currentRepairs =>
+                    //     currentRepairs.map((r, i) =>
+                    //         i === index ? { ...r, carData, mechanicData } : r
+                    //     )
+                    // );
+
                     setRepairs(currentRepairs =>
-                        currentRepairs.map((r, i) =>
-                            i === index ? { ...r, carData, mechanicData } : r
+                        currentRepairs.map((r) =>
+                            r.repair_id === repair.repair_id
+                                ? { ...r, carData, mechanicData }
+                                : r
                         )
                     );
                 } catch (error) {
@@ -62,11 +72,15 @@ export default function Calendar() {
     }, []);
 
     return (
-        <div>
-            <RepairsCalendar
-                repairs={repairs}
-                mechanics={mechanics}
-            ></RepairsCalendar>
+        <div className="p-5">
+            {repairs.length > 0 ? (
+                <RepairsCalendar
+                    repairs={repairs}
+                    mechanics={mechanics}
+                ></RepairsCalendar>
+            ) : (
+                <RepairsCalendarSkeleton></RepairsCalendarSkeleton>
+            )}
         </div>
     );
 };
