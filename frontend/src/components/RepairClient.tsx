@@ -2,6 +2,7 @@
 
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -25,6 +26,7 @@ import { Car } from "@/types/Car";
 import { Mechanic } from "@/types/Mechanic";
 import { apiClient } from "@/lib/apiClient";
 import { Loader2 } from "lucide-react";
+import { Skeleton } from "./ui/skeleton";
 
 type RepairClientProps = {
     id: number;
@@ -43,90 +45,49 @@ const formSchema = z.object({
 });
 
 export default function RepairClient({ id }: RepairClientProps) {
-    const [repair, setRepair] = useState<Repair | null>(null);
-    const [mechanics, setMechanics] = useState<Mechanic[]>([]);
-    const [cars, setCars] = useState<Car[]>([]);
     const [errorMessage, setErrormessage] = useState<string>("");
     const [open, setOpen] = useState<boolean>(false);
     const [isDialogLoading, setIsDialogLoading] = useState<boolean>(false);
 
-    async function getRepair() {
-        try {
-            const repairData = await apiClient.get<Repair>(`/repairs/${id}`);
+    const {
+        data: repair,
+        isLoading: loadingRepair,
+        isError: errorRepair,
+        refetch: refetchRepair,
+    } = useQuery({
+        queryKey: ["repair", id],
+        queryFn: () => apiClient.get<Repair>(`/repairs/${id}`),
+    });
 
-            try {
-                const carData = await apiClient.get<Car>(`/cars/${repairData.car_id}`);
+    const {
+        data: car,
+        isLoading: loadingCar,
+        isError: errorCar
+    } = useQuery({
+        queryKey: ["car", repair?.car_id],
+        queryFn: () => apiClient.get<Car>(`/cars/${repair!.car_id}`),
+        enabled: !!repair
+    });
 
-                repairData.carData = carData;
-            } catch (error) {
-                if (axios.isAxiosError(error)) {
-                    if (error?.response?.status == 404) {
-                        setErrormessage(error.response.data);
-                    }
-                } else {
-                    console.log(error);
-                }
-            }
+    const {
+        data: mechanic,
+        isLoading: loadingMechanic,
+        isError: errorMechanic
+    } = useQuery({
+        queryKey: ["mechanic", repair?.mechanic_id],
+        queryFn: () => apiClient.get<Mechanic>(`/mechanics/${repair!.mechanic_id}`),
+        enabled: !!repair
+    });
 
-            try {
-                const mechanicData = await apiClient.get<Mechanic>(
-                    `/mechanics/${repairData.mechanic_id}`
-                );
+    const { data: mechanicsList = [], isLoading: loadingMechanicsList } = useQuery({
+        queryKey: ["mechanicsList"],
+        queryFn: () => apiClient.get<Mechanic[]>("/mechanics"),
+    });
 
-                repairData.mechanicData = mechanicData;
-            } catch (error) {
-                if (axios.isAxiosError(error)) {
-                    if (error?.response?.status == 404) {
-                        setErrormessage(error.response.data);
-                    }
-                } else {
-                    console.log(error);
-                }
-            }
-
-            setRepair(repairData);
-
-            form.reset({
-                car_id: repairData.car_id.toString(),
-                mechanic_id: repairData.mechanic_id.toString(),
-                date: repairData.date.split("T")[0],
-                time: repairData.time,
-                description: repairData.description,
-                estimated_work_time: repairData.estimated_work_time,
-                work_time: repairData.work_time,
-                cost: repairData.cost,
-                status: repairData.status
-            });
-        } catch (error) {
-            if (axios.isAxiosError(error)) {
-                if (error?.response?.status == 404) {
-                    setErrormessage(error.response.data);
-                }
-            } else {
-                console.log(error);
-            }
-        }
-    }
-
-    async function getMechanics() {
-        try {
-            const mechanicsData = await apiClient.get<Mechanic[]>("/mechanics");
-
-            setMechanics(mechanicsData);
-        } catch (error) {
-            console.log(error);
-        }
-    }
-
-    async function getCars() {
-        try {
-            const carsData = await apiClient.get<Car[]>("/cars");
-
-            setCars(carsData);
-        } catch (error) {
-            console.log(error);
-        }
-    }
+    const { data: carsList = [], isLoading: loadingCarsList } = useQuery({
+        queryKey: ["carsList"],
+        queryFn: () => apiClient.get<Car[]>("/cars"),
+    });
 
     async function editRepairSubmit(values: z.infer<typeof formSchema>) {
         try {
@@ -134,7 +95,7 @@ export default function RepairClient({ id }: RepairClientProps) {
 
             await apiClient.put(`/repairs/${id}`, values);
 
-            getRepair();
+            refetchRepair();
 
             toast.info("Repair updated successfully");
 
@@ -179,12 +140,6 @@ export default function RepairClient({ id }: RepairClientProps) {
         }
     });
 
-    useEffect(() => {
-        getRepair();
-        getMechanics();
-        getCars();
-    }, [id]);
-
     return (
         <div className="p-5">
             <Dialog open={open} onOpenChange={setOpen}>
@@ -214,7 +169,7 @@ export default function RepairClient({ id }: RepairClientProps) {
                                                         </SelectTrigger>
                                                     </FormControl>
                                                     <SelectContent>
-                                                        {cars.map((car) => (
+                                                        {carsList.map((car) => (
                                                             <SelectItem
                                                                 key={car.car_id}
                                                                 value={car.car_id.toString()}>
@@ -240,7 +195,7 @@ export default function RepairClient({ id }: RepairClientProps) {
                                                         </SelectTrigger>
                                                     </FormControl>
                                                     <SelectContent>
-                                                        {mechanics.map((mechanic) => (
+                                                        {mechanicsList.map((mechanic) => (
                                                             <SelectItem
                                                                 key={mechanic.mechanic_id}
                                                                 value={mechanic.mechanic_id.toString()}>
@@ -356,42 +311,113 @@ export default function RepairClient({ id }: RepairClientProps) {
                     }
                 </DialogContent>
             </Dialog>
-            {repair && (
-                <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                {!loadingCar && car ? (
                     <div className="bg-white shadow-md rounded-xl p-6 border border-gray-200">
                         <h2 className="text-xl font-semibold mb-4 text-gray-800">Car Information</h2>
                         <div className="space-y-2">
-                            <p><span className="font-medium">Registration:</span> {repair.carData?.registration_number ?? "N/A"}</p>
-                            <p><span className="font-medium">Brand:</span> {repair.carData?.brand ?? "N/A"}</p>
-                            <p><span className="font-medium">Model:</span> {repair.carData?.model ?? "N/A"}</p>
-                            <p><span className="font-medium">Year:</span> {repair.carData?.production_year ?? "N/A"}</p>
-                            <p><span className="font-medium">Mileage:</span> {repair.carData?.mileage?.toLocaleString() ?? "N/A"} km</p>
-                            {repair.carData?.is_deleted && (
+                            <p><span className="font-medium">Registration:</span> {car.registration_number ?? "N/A"}</p>
+                            <p><span className="font-medium">Brand:</span> {car.brand ?? "N/A"}</p>
+                            <p><span className="font-medium">Model:</span> {car.model ?? "N/A"}</p>
+                            <p><span className="font-medium">Year:</span> {car.production_year ?? "N/A"}</p>
+                            <p><span className="font-medium">Mileage:</span> {car.mileage?.toLocaleString() ?? "N/A"} km</p>
+                            {car.is_deleted && (
                                 <p className="text-red-500 font-semibold">Deleted</p>
                             )}
                         </div>
                     </div>
+                ) : (
+                    <div className="bg-white shadow-md rounded-xl p-6 border border-gray-200">
+                        <h2 className="text-xl font-semibold mb-4 text-gray-800">
+                            Car Information
+                        </h2>
 
+                        <div className="space-y-2">
+                            <div className="flex gap-2 items-center">
+                                <span className="font-medium w-32">Registration:</span>
+                                <Skeleton className="h-4 w-40 bg-gray-300 animate-pulse" />
+                            </div>
+
+                            <div className="flex gap-2 items-center">
+                                <span className="font-medium w-32">Brand:</span>
+                                <Skeleton className="h-4 w-32 bg-gray-300 animate-pulse" />
+                            </div>
+
+                            <div className="flex gap-2 items-center">
+                                <span className="font-medium w-32">Model:</span>
+                                <Skeleton className="h-4 w-32 bg-gray-300 animate-pulse" />
+                            </div>
+
+                            <div className="flex gap-2 items-center">
+                                <span className="font-medium w-32">Year:</span>
+                                <Skeleton className="h-4 w-20 bg-gray-300 animate-pulse" />
+                            </div>
+
+                            <div className="flex gap-2 items-center">
+                                <span className="font-medium w-32">Mileage:</span>
+                                <Skeleton className="h-4 w-28 bg-gray-300 animate-pulse" />
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {!loadingMechanic && mechanic ? (
                     <div className="bg-white shadow-md rounded-xl p-6 border border-gray-200">
                         <h2 className="text-xl font-semibold mb-4 text-gray-800">Mechanic Information</h2>
                         <div className="space-y-2">
-                            <p><span className="font-medium">Name:</span> {repair.mechanicData ? `${repair.mechanicData.firstname} ${repair.mechanicData.lastname}` : "N/A"}</p>
-                            <p><span className="font-medium">Specialization:</span> {repair.mechanicData?.specialization ?? "N/A"}</p>
-                            <p><span className="font-medium">Phone:</span> {repair.mechanicData?.phone_number ?? "N/A"}</p>
-                            <p><span className="font-medium">Email:</span> {repair.mechanicData?.email ?? "N/A"}</p>
+                            <p><span className="font-medium">Name:</span> {`${mechanic.firstname} ${mechanic.lastname}`}</p>
+                            <p><span className="font-medium">Specialization:</span> {mechanic.specialization}</p>
+                            <p><span className="font-medium">Phone:</span> {mechanic.phone_number}</p>
+                            <p><span className="font-medium">Email:</span> {mechanic.email}</p>
                         </div>
                     </div>
 
+                ) : (
+                    <div className="bg-white shadow-md rounded-xl p-6 border border-gray-200">
+                        <h2 className="text-xl font-semibold mb-4 text-gray-800">
+                            Mechanic Information
+                        </h2>
+
+                        <div className="space-y-2">
+                            <div className="flex gap-2 items-center">
+                                <span className="font-medium w-32">Name:</span>
+                                <Skeleton className="h-4 w-48 bg-gray-300 animate-pulse" />
+                            </div>
+
+                            <div className="flex gap-2 items-center">
+                                <span className="font-medium w-32">Specialization:</span>
+                                <Skeleton className="h-4 w-40 bg-gray-300 animate-pulse" />
+                            </div>
+
+                            <div className="flex gap-2 items-center">
+                                <span className="font-medium w-32">Phone:</span>
+                                <Skeleton className="h-4 w-32 bg-gray-300 animate-pulse" />
+                            </div>
+
+                            <div className="flex gap-2 items-center">
+                                <span className="font-medium w-32">Email:</span>
+                                <Skeleton className="h-4 w-52 bg-gray-300 animate-pulse" />
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {!loadingRepair && repair ? (
                     <div className="bg-white shadow-md rounded-xl p-6 border border-gray-200 md:col-span-2">
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-xl font-semibold">Repair Details</h2>
-                            <Button
-                                onClick={() => setOpen(true)}
-                                variant="outline"
-                                className="text-emerald-900 border-emerald-400 hover:bg-emerald-100 cursor-pointer"
-                            >
-                                Edit
-                            </Button>
+                            {!loadingCar && !loadingMechanic ? (
+                                <Button
+                                    onClick={() => setOpen(true)}
+                                    variant="outline"
+                                    className="text-emerald-900 border-emerald-400 hover:bg-emerald-100 cursor-pointer"
+                                >
+                                    Edit
+                                </Button>
+                            ) : (
+                                <Skeleton className="h-9 w-20 rounded-md bg-gray-300 animate-pulse" />
+                            )}
+
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -414,16 +440,60 @@ export default function RepairClient({ id }: RepairClientProps) {
                             </p>
                         </div>
                     </div>
-                </div>
-            )}
+                ) : (
+                    <div className="bg-white shadow-md rounded-xl p-6 border border-gray-200 md:col-span-2">
+
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-xl font-semibold">Repair Details</h2>
+                            <Skeleton className="h-9 w-20 rounded-md bg-gray-300 animate-pulse" />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="flex gap-2 items-center">
+                                <span className="font-medium w-40">Date:</span>
+                                <Skeleton className="h-4 w-28 bg-gray-300 animate-pulse" />
+                            </div>
+
+                            <div className="flex gap-2 items-center">
+                                <span className="font-medium w-40">Time:</span>
+                                <Skeleton className="h-4 w-20 bg-gray-300 animate-pulse" />
+                            </div>
+
+                            <div className="flex gap-2 items-center">
+                                <span className="font-medium w-40">Description:</span>
+                                <Skeleton className="h-4 w-48 bg-gray-300 animate-pulse" />
+                            </div>
+
+                            <div className="flex gap-2 items-center">
+                                <span className="font-medium w-40">Estimated Work Time:</span>
+                                <Skeleton className="h-4 w-24 bg-gray-300 animate-pulse" />
+                            </div>
+
+                            <div className="flex gap-2 items-center">
+                                <span className="font-medium w-40">Work Time:</span>
+                                <Skeleton className="h-4 w-16 bg-gray-300 animate-pulse" />
+                            </div>
+
+                            <div className="flex gap-2 items-center">
+                                <span className="font-medium w-40">Cost:</span>
+                                <Skeleton className="h-4 w-24 bg-gray-300 animate-pulse" />
+                            </div>
+
+                            <div className="flex gap-2 items-center">
+                                <span className="font-medium w-40">Status:</span>
+                                <Skeleton className="h-6 w-24 rounded-full bg-gray-300 animate-pulse" />
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+            </div>
 
             {repair &&
                 <pre>
                     {JSON.stringify(repair, null, 2)}
                 </pre>
             }
-
-            {/* Loader if not */}
 
         </div>
     );

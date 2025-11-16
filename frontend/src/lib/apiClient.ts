@@ -24,7 +24,7 @@ async function request<T>(config: AxiosRequestConfig): Promise<T> {
             withCredentials: true,
         });
 
-        await sleep(1000);
+        await sleep(1000 + Math.floor(Math.random() * 1000));
 
         return response.data;
     } catch (error: unknown) {
