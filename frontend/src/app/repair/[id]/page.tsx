@@ -1,4 +1,4 @@
-import RepairClient from "@/components/RepairClient";
+import RepairClient from "@/components/repair/RepairClient";
 
 interface RepairParams {
     id: number;

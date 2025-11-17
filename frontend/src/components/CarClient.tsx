@@ -60,6 +60,7 @@ export default function CarClient({ id }: CarClientProps) {
     const [repairs, setRepairs] = useState<Repair[]>([]);
     const [owners, setOwners] = useState<Owner[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [repairsLoading, setRepairsLoading] = useState<boolean>(false);
     const [isSheetLoading, setIsSheetLoading] = useState<boolean>(false);
     const [openSheet, setOpenSheet] = useState<boolean>(false);
 
@@ -133,7 +134,7 @@ export default function CarClient({ id }: CarClientProps) {
 
     async function getCarRepairs() {
         try {
-            setIsLoading(true);
+            setRepairsLoading(true);
 
             const repairsData = await apiClient.get<Repair[]>(`/cars/${id}/repairs`);
 
@@ -162,7 +163,7 @@ export default function CarClient({ id }: CarClientProps) {
                 console.log(error);
             }
         } finally {
-            setIsLoading(false);
+            setRepairsLoading(false);
         }
     }
 
@@ -417,7 +418,7 @@ export default function CarClient({ id }: CarClientProps) {
                         <CardTitle>Repair history</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        {isLoading ? (
+                        {repairsLoading ? (
                             <div className="space-y-4">
                                 {[1, 2, 3].map((i) => (
                                     <div key={i} className="flex items-center space-x-4">
