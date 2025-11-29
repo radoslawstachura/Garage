@@ -35,23 +35,6 @@ import {
   TableRow
 } from "@/components/ui/table";
 import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger
-} from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -63,20 +46,16 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import { Ghost } from "lucide-react";
 import { X } from 'lucide-react';
 import { ArrowDownUp } from 'lucide-react';
-import { Plus } from "lucide-react"
-import { Loader2 } from "lucide-react";
 import { Pencil } from "lucide-react";
 import { Trophy } from "lucide-react";
 import { toast } from "sonner";
 
-import { FormCombobox } from "@/components/FormCombobox";
 import { RepairsCalendar } from "@/components/RepairsCalendar";
 import { RepairsCalendarSkeleton } from "@/components/skeletons/RepairsCalendarSkeleton";
 import { apiClient } from "@/lib/apiClient";
@@ -86,6 +65,8 @@ import { Repair } from "@/types/Repair";
 import { useJwt } from "@/contexts/JwtContext";
 import { PieChartSkeleton } from "@/components/skeletons/PieChartSkeleton";
 import { AreaChartSkeleton } from "@/components/skeletons/AreaChartSkeleton";
+import { AddRepairDialog } from "@/components/AddRepairDialog";
+import { RepairStatusPieChart } from "@/components/RepairStatusPieChart";
 
 const formSchema = z.object({
   car_id: z.string().regex(/\b[0-9]+\b/),
@@ -145,7 +126,7 @@ export default function Home() {
   const [open, setOpen] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isDialogLoading, setIsDialogLoading] = useState<boolean>(false);
-  const [pieChartData, setPieChartData] = useState<Array<object>>([]);
+  const [pieChartData, setPieChartData] = useState<Array<{ name: string, value: number }>>([]);
 
   useEffect(() => {
     if (created + inProgress + completed > 0) {
@@ -390,262 +371,21 @@ export default function Home() {
     <div style={{
       padding: "20px"
     }}>
-      {/* <div className="top" style={{
-        display: "flex"
-      }}>
-        <CompactCard className="max-h-36" style={{
-          width: "20%",
-          background: "#5664d2",
-          color: "white"
-        }}>
-          <CompactCardHeader>
-            <CompactCardTitle>Pending</CompactCardTitle>
-          </CompactCardHeader>
-          <CompactCardContent>
-            <p style={{ fontSize: "20px" }}>{created}</p>
-          </CompactCardContent>
-          <hr />
-          <CompactCardFooter>
-            <Button
-              onClick={() => setStatus("pending")}
-              className="bg-[white] text-[18px] text-[#5664d2] hover:bg-[#cdd0f5] hover:text-[#333] cursor-pointer"
-            >View</Button>
-          </CompactCardFooter>
-        </CompactCard>
-        <CompactCard className="max-h-36" style={{
-          width: "20%",
-          background: "#fcb92c",
-          color: "white"
-        }}>
-          <CompactCardHeader>
-            <CompactCardTitle>In progress</CompactCardTitle>
-          </CompactCardHeader>
-          <CompactCardContent>
-            <p style={{ fontSize: "20px" }}>{inProgress}</p>
-          </CompactCardContent>
-          <hr />
-          <CompactCardFooter>
-            <Button
-              onClick={() => setStatus("in progress")}
-              className="bg-[white] text-[18px] text-[#fcb92c] hover:bg-[#fef4e1] hover:text-[#333] cursor-pointer"
-            >View</Button>
-          </CompactCardFooter>
-        </CompactCard>
-        <CompactCard className="max-h-36" style={{
-          width: "20%",
-          background: "#1cbb8c",
-          color: "white"
-        }}>
-          <CompactCardHeader>
-            <CompactCardTitle>Completed</CompactCardTitle>
-          </CompactCardHeader>
-          <CompactCardContent>
-            <p style={{ fontSize: "20px" }}>{completed}</p>
-          </CompactCardContent>
-          <hr />
-          <CompactCardFooter>
-            <Button
-              onClick={() =>
-                setStatus("finished")
-              }
-              className="bg-[white] text-[18px] text-[#1ccb8c] hover:bg-[#d2f1e7] hover:text-[#333] cursor-pointer"
-            >View</Button>
-          </CompactCardFooter>
-        </CompactCard>
-        <CompactCard className="max-h-36" style={{
-          width: "20%",
-          background: "#343a40",
-          color: "white"
-        }}>
-          <CompactCardHeader>
-            <CompactCardTitle>Total Revenue</CompactCardTitle>
-          </CompactCardHeader>
-          <CompactCardContent>
-            <p style={{ fontSize: "20px" }}>{revenue.toFixed(2)}</p>
-          </CompactCardContent>
-          <hr />
-          <CompactCardFooter>
-            <p>Card footer</p>
-          </CompactCardFooter>
-        </CompactCard>
-      </div> */}
-      {/* {
-        filteredRepairs.length > 0 && */}
       <p>{incomeChartData.length > 0 && repairsChartData.length > 0}</p>
       <div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium
-              flex items-center gap-2 rounded-xl shadow-md transition-all
-              hover:shadow-lg cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              Add Record
-            </Button>
-          </DialogTrigger>
-          <DialogContent showCloseButton={false}>
-            {isDialogLoading ? (
-              <div className="flex items-center justify-center py-20">
-                <Loader2 className="animate-spin h-8 w-8 text-gray-500" />
-                <span className="ml-2 text-gray-600">Saving...</span>
-              </div>
-            ) : (
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(addRepairSubmit)}>
-                  <DialogHeader>
-                    <DialogTitle>Add repair</DialogTitle>
-                  </DialogHeader>
-                  <FormField
-                    control={form.control}
-                    name="car_id"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Car</FormLabel>
-                        <FormCombobox
-                          value={field.value}
-                          onChange={field.onChange}
-                          options={cars.map((car) => ({
-                            value: car.car_id.toString(),
-                            label: car.registration_number,
-                          }))}
-                          placeholder="Select a car"
-                        />
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="mechanic_id"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Mechanic</FormLabel>
-                        <FormCombobox
-                          value={field.value}
-                          onChange={field.onChange}
-                          options={mechanics.map((m) => ({
-                            value: m.mechanic_id.toString(),
-                            label: `${m.firstname} ${m.lastname}`,
-                          }))}
-                          placeholder="Select a mechanic"
-                        />
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="date"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Date</FormLabel>
-                        <FormControl>
-                          <Input placeholder="..." {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="time"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Time</FormLabel>
-                        <FormControl>
-                          <Input placeholder="..." {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Description</FormLabel>
-                        <FormControl>
-                          <Input placeholder="..." {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="estimated_work_time"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Estimated work time</FormLabel>
-                        <FormControl>
-                          <Input placeholder="..." {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="work_time"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Work time</FormLabel>
-                        <FormControl>
-                          <Input placeholder="..." {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="cost"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Cost</FormLabel>
-                        <FormControl>
-                          <Input placeholder="..." {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="status"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Status</FormLabel>
-                        <FormControl>
-                          <Input placeholder="..." {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <DialogFooter className="pt-5">
-                    <DialogClose asChild>
-                      <Button className="bg-gray-500 hover:bg-gray-600 text-white font-medium
-              flex items-center gap-2 rounded-xl shadow-md transition-all
-              hover:shadow-lg cursor-pointer">Cancel</Button>
-                    </DialogClose>
-                    <Button className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium
-              flex items-center gap-2 rounded-xl shadow-md transition-all
-              hover:shadow-lg cursor-pointer" type="submit">Submit</Button>
-                  </DialogFooter>
-                </form>
-              </Form>
-            )}
-          </DialogContent>
-        </Dialog>
+        <AddRepairDialog
+          open={open}
+          setOpen={setOpen}
+          cars={cars}
+          mechanics={mechanics}
+          onSubmit={addRepairSubmit}
+          isLoading={isDialogLoading}
+        />
       </div>
       {/* === STATUS PIE + SIDE INSIGHTS === */}
       <div className="grid grid-cols-1 md:grid-cols-[3fr_2fr] gap-6 mt-6 items-center">
         {/* LEFT: Pie Chart */}
-        <Card className="shadow-md hover:shadow-lg transition-all duration-300 border border-gray-200">
+        {/* <Card className="shadow-md hover:shadow-lg transition-all duration-300 border border-gray-200">
           <CardHeader>
             <CardTitle className="text-lg font-semibold text-gray-800">
               Udział statusów napraw
@@ -688,7 +428,10 @@ export default function Home() {
               </ResponsiveContainer>
             )}
           </CardContent>
-        </Card>
+        </Card> */}
+        <RepairStatusPieChart
+          pieChartData={pieChartData}
+        />
 
         {/* RIGHT: Vertical stack of 2 cards */}
         <div className="flex flex-col gap-4">

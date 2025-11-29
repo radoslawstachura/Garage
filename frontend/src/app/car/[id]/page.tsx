@@ -1,4 +1,4 @@
-import CarClient from "@/components/CarClient";
+import CarClient from "@/views/Car";
 
 interface CarParams {
     id: number;

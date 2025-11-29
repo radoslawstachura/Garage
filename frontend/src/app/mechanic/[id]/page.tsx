@@ -1,4 +1,4 @@
-import MechanicClient from "@/components/MechanicClient";
+import MechanicClient from "@/views/Mechanic";
 
 interface MechanicParams {
     id: number;

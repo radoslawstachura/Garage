@@ -1,4 +1,4 @@
-import OwnerClient from "@/components/OwnerClient";
+import OwnerClient from "@/views/Owner";
 
 interface OwnerParams {
     id: number;
