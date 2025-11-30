@@ -19,5 +19,5 @@ Thumbs.db
 .git
 .gitignore
 
-.env
-.env.docker
+# .env
+# .env.docker

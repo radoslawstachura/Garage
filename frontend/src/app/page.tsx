@@ -13,10 +13,6 @@ import {
   Area,
   XAxis,
   Tooltip,
-  PieChart,
-  Pie,
-  Cell,
-  Legend,
   YAxis,
 } from "recharts";
 import {
@@ -63,7 +59,6 @@ import { Car } from "@/types/Car";
 import { Mechanic } from "@/types/Mechanic";
 import { Repair } from "@/types/Repair";
 import { useJwt } from "@/contexts/JwtContext";
-import { PieChartSkeleton } from "@/components/skeletons/PieChartSkeleton";
 import { AreaChartSkeleton } from "@/components/skeletons/AreaChartSkeleton";
 import { AddRepairDialog } from "@/components/AddRepairDialog";
 import { RepairStatusPieChart } from "@/components/RepairStatusPieChart";
