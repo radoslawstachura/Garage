@@ -31,9 +31,9 @@ export function CarCard({ car, role, onDelete }: CarCardProps) {
                             </button>
                         </Link>
 
-                        <button className="cursor-pointer flex-1 px-2 py-1 rounded-md border border-yellow-400 bg-yellow-50 hover:bg-yellow-100 text-sm">
+                        {/* <button className="cursor-pointer flex-1 px-2 py-1 rounded-md border border-yellow-400 bg-yellow-50 hover:bg-yellow-100 text-sm">
                             Edit
-                        </button>
+                        </button> */}
 
                         <button
                             className="cursor-pointer flex-1 px-2 py-1 rounded-md border border-red-400 bg-red-50 hover:bg-red-100 text-sm text-red-600"

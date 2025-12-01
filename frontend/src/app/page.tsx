@@ -267,9 +267,11 @@ export default function Home() {
     }
   }
 
-  async function deleteRepairSubmit() {
+  // route is not ready on backend
+  async function deleteRepairSubmit(id: number) {
+    console.log(id);
     // try {
-    //   await apiClient.delete("/repairs");
+    //   await apiClient.delete("/repair");
     // } catch(error) {
     //   console.log(error);
     // }
@@ -738,6 +740,7 @@ export default function Home() {
               [...Array(5)].map((_, i) => (
                 <TableRow key={i}>
                   <TableCell colSpan={role === "admin" ? 10 : 8}>
+                    {/* <TableCell colSpan={role === "admin" ? 8 : 8}> */}
                     <Skeleton className="h-4 w-full rounded-md bg-gray-300 animate-pulse" />
                   </TableCell>
                 </TableRow>
@@ -745,6 +748,7 @@ export default function Home() {
             ) : filteredRepairs.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={role === "admin" ? 10 : 8} className="text-center py-6 text-gray-500">
+                  {/* <TableCell colSpan={role === "admin" ? 8 : 8} className="text-center py-6 text-gray-500"> */}
                   <div className="flex flex-col items-center justify-center py-20 text-gray-500">
                     <Ghost size={64} strokeWidth={1.5} className="mb-4" />
                     <h2 className="text-2xl font-semibold mb-2">
@@ -869,7 +873,7 @@ export default function Home() {
                         </span>
                       </TableCell>
                       <TableCell className="px-3 py-2 text-right">
-                        <span onClick={() => deleteRepairSubmit()}
+                        <span onClick={() => deleteRepairSubmit(repair.repair_id)}
                           className="bg-[#fee2e2] text-[#dc2626] px-3 py-1 rounded-md text-sm font-medium 
                  hover:bg-[#fecaca] hover:text-[#991b1b] cursor-pointer transition-colors"
                         >

@@ -101,6 +101,7 @@ export function EditRepairDialog({ open, onOpenChange, repair, carsList, mechani
                 cost: repair.cost,
                 status: repair.status
             });
+            console.log("Zmiana car_id na:", repair.car_id);
         }
     }, [repair]);
 
@@ -125,7 +126,7 @@ export function EditRepairDialog({ open, onOpenChange, repair, carsList, mechani
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Car</FormLabel>
-                                        <Select onValueChange={field.onChange} defaultValue="1">
+                                        <Select onValueChange={field.onChange} defaultValue={field.value.toString()}>
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Select a car" />
                                             </SelectTrigger>

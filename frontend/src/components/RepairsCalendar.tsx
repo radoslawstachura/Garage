@@ -9,6 +9,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { Repair } from "@/types/Repair";
 import { Mechanic } from "@/types/Mechanic";
+import Link from "next/link";
 
 type RepairsCalendarProps = {
     repairs: Repair[];
@@ -103,18 +104,27 @@ export function RepairsCalendar({ repairs, mechanics }: RepairsCalendarProps) {
                             <div className="space-y-2 flex-1">
                                 {dailyRepairs.length > 0 ? (
                                     dailyRepairs.map((r) => (
-                                        <div
+                                        <Link
                                             key={r.repair_id}
-                                            className="p-2 rounded-md bg-blue-50 border border-blue-200 hover:bg-blue-100 transition-all"
+                                            href={`/repair/${r.repair_id}`}
                                         >
-                                            <p className="text-sm font-medium">{r.description}</p>
-                                            <p className="text-xs text-gray-600">
-                                                {r.mechanicData
-                                                    ? `${r.mechanicData.firstname} ${r.mechanicData.lastname}`
-                                                    : `Mechanik #${r.mechanic_id}`}
-                                            </p>
-                                            <p className="text-xs text-gray-400">{r.time.slice(0, -3)}</p>
-                                        </div>
+                                            <div
+                                                className="p-2 rounded-md bg-blue-50 border border-blue-200 hover:bg-blue-100 transition-all"
+                                            >
+                                                <p className="text-sm font-medium">{r.description}</p>
+                                                <p className="text-xs text-gray-600">
+                                                    {r.mechanicData
+                                                        ? `${r.mechanicData.firstname} ${r.mechanicData.lastname}`
+                                                        : `Mechanic #${r.mechanic_id}`}
+                                                </p>
+                                                <p className="text-xs text-gray-600">
+                                                    {r.carData
+                                                        ? `${r.carData.brand} ${r.carData.model} (${r.carData.registration_number})`
+                                                        : `Car #${r.car_id}`}
+                                                </p>
+                                                <p className="text-xs text-gray-400">{r.time.slice(0, -3)}</p>
+                                            </div>
+                                        </Link>
                                     ))
                                 ) : (
                                     <p className="text-xs text-gray-400 italic text-center mt-4">
