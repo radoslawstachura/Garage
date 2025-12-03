@@ -64,6 +64,7 @@ docker compose up --build
 
 # Stop and remove containers
 docker compose down
+```
 
 ## Authentication & Security
 
