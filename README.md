@@ -85,4 +85,8 @@ docker compose down
 
 - Built with **Next.js** and **React** (TypeScript).
 - Uses **ui.shadcn** components for a consistent design system.
-- Communicates with the backend through the NGINX gateway at `http://localhost:8080` (or the configured base URL).
+- Communicates with the backend through the NGINX gateway at `http://localhost:8080` (or the configured base URL). dodaj informację, że przykładowe pliki .env są dołączone
+
+## Environment Files
+
+Example .env files for individual microservices are included in the project to help with setup and configuration.
