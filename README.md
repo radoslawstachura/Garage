@@ -1,20 +1,5 @@
 # Garage — Microservices Backend & Frontend
 
-## Overview
-
-**Garage** is a full-stack application implemented with a microservices backend and a modern React + Next.js frontend. The system is designed for managing cars, mechanics, repairs and related statistics. Backend microservices are written in **Express.js** with **TypeScript** and each service runs with its own PostgreSQL and Redis instances inside the project's Docker network. Authentication uses **JWT** and there is a dedicated **redis-blacklist** service that stores revoked tokens.
-
-
-## Architecture
-
-- **Microservices**: `cars`, `mechanics`, `repairs`, `statistics`, `user`
-- **Per-microservice storage**: Each microservice has its own **PostgreSQL** database and a **Redis** instance (all running on the project's Docker network).
-- **Redis blacklist**: A shared Redis instance (`redis-blacklist`) holds revoked JWTs.
-- **Authentication**: JSON Web Tokens (JWT) used for authentication and authorization across services. Revoked tokens are stored in `redis-blacklist`.
-- **Reverse proxy / gateway**: An **NGINX** reverse-proxy exposes the backend API and acts as the single access point on port **8080**.
-- **Frontend**: React + Next.js application written in TypeScript using the **ui.shadcn** component library.
-
-
 ## Technology Stack
 
 - Backend: Express.js + TypeScript
@@ -24,6 +9,18 @@
 - Containerization & orchestration: Docker, Docker Compose
 - Reverse proxy: NGINX (port **8080**)
 
+## Overview
+
+**Garage** is a full-stack application implemented with a microservices backend and a modern React + Next.js frontend. The system is designed for managing cars, mechanics, repairs and related statistics. Backend microservices are written in **Express.js** with **TypeScript** and each service runs with its own PostgreSQL and Redis instances inside the project's Docker network. Authentication uses **JWT** and there is a dedicated **redis-blacklist** service that stores revoked tokens.
+
+## Architecture
+
+- **Microservices**: `cars`, `mechanics`, `repairs`, `statistics`, `user`
+- **Per-microservice storage**: Each microservice has its own **PostgreSQL** database and a **Redis** instance (all running on the project's Docker network).
+- **Redis blacklist**: A shared Redis instance (`redis-blacklist`) holds revoked JWTs.
+- **Authentication**: JSON Web Tokens (JWT) used for authentication and authorization across services. Revoked tokens are stored in `redis-blacklist`.
+- **Reverse proxy / gateway**: An **NGINX** reverse-proxy exposes the backend API and acts as the single access point on port **8080**.
+- **Frontend**: React + Next.js application written in TypeScript using the **ui.shadcn** component library.
 
 ## Key Features
 
