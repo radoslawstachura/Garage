@@ -6,6 +6,7 @@ import carsRoutes from "./routes/carsRoutes";
 
 import { errorHandler } from "./middleware/errorHandler";
 import { AppError } from "./types/AppError";
+import { startConsumer } from "./kafka/consumer";
 
 dotenv.config();
 
@@ -45,6 +46,18 @@ app.all("*", (req, res, next) => {
 app.use(errorHandler);
 // === ERROR HANDLING ===
 
-app.listen(PORT, () => {
-    console.log(`Listening on port ${PORT}`);
-});
+async function start() {
+    try {
+        await startConsumer();
+        console.log("Kafka consumer ready");
+
+        app.listen(PORT, () => {
+            console.log(`Listening on port ${PORT}`);
+        });
+    } catch (error) {
+        console.error("Failed to start Kafka consumer:", error);
+        process.exit(1);
+    }
+}
+
+start();

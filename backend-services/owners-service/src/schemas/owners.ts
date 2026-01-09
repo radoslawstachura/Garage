@@ -37,3 +37,9 @@ export const UpdateOwnerBodySchema = z.object({
 });
 
 export type UpdateOwnerBody = z.infer<typeof UpdateOwnerBodySchema>;
+
+export const DeleteOwnerParamsSchema = z.object({
+    id: z.string()
+});
+
+export type DeleteOwnerParams = z.infer<typeof DeleteOwnerParamsSchema>;

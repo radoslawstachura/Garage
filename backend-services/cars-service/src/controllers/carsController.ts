@@ -260,7 +260,6 @@ export const deleteCar = async (req: Request, res: Response, next: NextFunction)
         `, [id]);
 
         await connectRedis();
-
         await redisClient.del("cars:all");
 
         res.sendStatus(204);

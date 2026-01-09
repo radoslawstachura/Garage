@@ -7,6 +7,8 @@ import ownersRoutes from "./routes/ownersRoutes";
 import { errorHandler } from "./middleware/errorHandler";
 import { AppError } from "./types/AppError";
 
+import { initKafkaProducer } from "./kafka/producer";
+
 dotenv.config();
 
 const app = express();
@@ -45,6 +47,19 @@ app.all("*", (req, res, next) => {
 app.use(errorHandler);
 // === ERROR HANDLING ===
 
-app.listen(PORT, () => {
-    console.log(`Listening on port ${PORT}`);
-});
+async function start() {
+    try {
+        await initKafkaProducer();
+        console.log("Kafka producer ready");
+
+        app.listen(PORT, () => {
+            console.log(`Listening on port ${PORT}`);
+        });
+
+    } catch (err) {
+        console.error("Failed to start service:", err);
+        process.exit(1);
+    }
+}
+
+start();

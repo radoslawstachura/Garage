@@ -12,9 +12,13 @@ services:
       - ./.env
     networks:
       - owners-net
+      - blacklist-net
+      - kafka-net
     depends_on:
       - owners-postgres
       - owners-redis
+      - redis-blacklist
+      - kafka
   owners-postgres:
     image: postgres:17.4-alpine
     environment:

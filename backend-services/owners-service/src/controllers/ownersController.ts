@@ -4,9 +4,10 @@ import axios from "axios";
 import { CacheUtil } from "../utils/CacheUtil";
 import { pool } from "../config/db";
 import { Owner } from "../types/Owner";
-import { CreateOwnerBody, CreateOwnerBodySchema, GetOwnerByIdParams, GetOwnerByIdParamsSchema, GetOwnersCarsParams, GetOwnersCarsParamsSchema, UpdateOwnerBody, UpdateOwnerBodySchema, UpdateOwnerParams, UpdateOwnerParamsSchema } from "../schemas/owners";
+import { CreateOwnerBody, CreateOwnerBodySchema, DeleteOwnerParams, DeleteOwnerParamsSchema, GetOwnerByIdParams, GetOwnerByIdParamsSchema, GetOwnersCarsParams, GetOwnersCarsParamsSchema, UpdateOwnerBody, UpdateOwnerBodySchema, UpdateOwnerParams, UpdateOwnerParamsSchema } from "../schemas/owners";
 import { AppError } from "../types/AppError";
 import { connectRedis, redisClient } from "../config/redis";
+import { kafkaProducer } from "../kafka/producer";
 
 export const getOwners = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -178,6 +179,48 @@ export const updateOwner = async (req: Request, res: Response, next: NextFunctio
         await redisClient.del("owners:all");
 
         res.json(result.rows[0]);
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const deleteOwner = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const parsedParams: DeleteOwnerParams = DeleteOwnerParamsSchema.parse(req.params);
+
+        const { id } = parsedParams;
+
+        const check = await pool.query(`
+            SELECT COUNT(*) FROM owners
+            WHERE owner_id = $1;    
+        `, [id]);
+
+        if (!Number(check.rows[0].count))
+            throw new AppError(`Owner with id: ${id} not found`, 404);
+
+        const result = await pool.query(`
+            DELETE FROM owners
+            WHERE owner_id = $1
+            RETURNING *;
+        `, [id]);
+
+        console.log("Deleted record:", result.rows[0]);
+
+        await kafkaProducer.send({
+            topic: "owner-events",
+            messages: [
+                {
+                    key: "OWNER_DELETED",
+                    value: JSON.stringify({ ownerId: id }),
+                },
+            ],
+        });
+
+        await connectRedis();
+
+        await redisClient.del("owners:all");
+
+        res.sendStatus(204);
     } catch (error) {
         next(error);
     }

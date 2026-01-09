@@ -5,7 +5,7 @@ import { Car } from "@/types/Car";
 
 interface CarInfoProps {
     car: Car | null;
-    isDeleting: boolean
+    isDeleting: boolean;
 }
 
 export default function CarInfo({ car, isDeleting }: CarInfoProps) {
@@ -21,18 +21,19 @@ export default function CarInfo({ car, isDeleting }: CarInfoProps) {
 
             <div className="flex items-center gap-2">
                 <b>Owner:</b>
-                <Link
-                    href={`/owner/${car.owner_id}`}
-                    className="underline text-blue-600 hover:text-blue-800"
-                >
-                    {car.ownerData ? (
-                        <span>
-                            {car.ownerData.firstname} {car.ownerData.lastname}
-                        </span>
-                    ) : (
-                        <Skeleton className="h-5 w-36 bg-gray-300 animate-pulse" />
-                    )}
-                </Link>
+
+                {car.ownerLoading ? (
+                    <Skeleton className="h-5 w-36 bg-gray-300 animate-pulse" />
+                ) : car.ownerData ? (
+                    <Link
+                        href={`/owner/${car.owner_id}`}
+                        className="underline text-blue-600 hover:text-blue-800"
+                    >
+                        {car.ownerData.firstname} {car.ownerData.lastname}
+                    </Link>
+                ) : (
+                    <span>N/A</span>
+                )}
             </div>
         </>
     );

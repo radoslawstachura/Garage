@@ -35,7 +35,7 @@ CREATE TABLE public.cars (
     model character varying(30) NOT NULL,
     production_year integer NOT NULL,
     mileage integer NOT NULL,
-    owner_id integer NOT NULL,
+    owner_id integer,
     vin character varying(17),
     last_update_date date DEFAULT CURRENT_TIMESTAMP NOT NULL,
     is_deleted boolean DEFAULT FALSE NOT NULL,

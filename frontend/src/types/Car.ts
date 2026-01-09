@@ -13,4 +13,5 @@ export interface Car {
     is_deleted: boolean;
     deleted_at: Date | null;
     ownerData: Owner | null;
+    ownerLoading: boolean
 };

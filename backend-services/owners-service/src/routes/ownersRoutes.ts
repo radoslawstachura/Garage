@@ -5,7 +5,8 @@ import {
     getOwnerById,
     getOwnerCars,
     createOwner,
-    updateOwner
+    updateOwner,
+    deleteOwner
 } from "../controllers/ownersController";
 
 const router = Router();
@@ -15,5 +16,6 @@ router.get("/:id", getOwnerById);
 router.get("/:id/cars", getOwnerCars)
 router.post("/", createOwner);
 router.put("/:id", updateOwner);
+router.delete("/:id", deleteOwner);
 
 export default router;

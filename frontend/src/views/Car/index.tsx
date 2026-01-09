@@ -39,12 +39,18 @@ export default function CarClient({ id }: CarClientProps) {
         queryKey: ["car", id],
         queryFn: async () => {
             const car = await apiClient.get<Car>(`/cars/${id}`);
+
+            car.ownerLoading = true;
+
             try {
                 const owner = await apiClient.get<Owner>(`/owners/${car.owner_id}`);
                 car.ownerData = owner;
             } catch {
                 car.ownerData = null;
+            } finally {
+                car.ownerLoading = false;
             }
+
             return car;
         }
     });

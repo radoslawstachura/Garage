@@ -12,9 +12,11 @@ services:
       - ./.env
     networks:
       - mechanics-net
+      - blacklist-net
     depends_on:
       - mechanics-postgres
       - mechanics-redis
+      - redis-blacklist
   mechanics-postgres:
     image: postgres:17.4-alpine
     environment:

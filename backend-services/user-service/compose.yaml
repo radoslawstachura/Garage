@@ -12,9 +12,11 @@ services:
       - ./.env
     networks:
       - user-net
+      - blacklist-net
     depends_on:
       - user-postgres
       - user-redis
+      - redis-blacklist
   user-postgres:
     image: postgres:17.4-alpine
     environment:

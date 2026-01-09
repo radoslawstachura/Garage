@@ -28,11 +28,40 @@ services:
   redis-blacklist:
     image: redis:alpine3.22
     networks:
-      - cars-net
-      - mechanics-net
-      - owners-net
-      - repairs-net
-      - user-net
+      - blacklist-net
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.7.0
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - zookeeper-net
+
+  kafka:
+    image: confluentinc/cp-kafka:7.7.0
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - kafka-net
+      - zookeeper-net
 
 networks:
   proxy-net:
+  blacklist-net:
+  kafka-net:
+  zookeeper-net:

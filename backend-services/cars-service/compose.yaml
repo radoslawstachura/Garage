@@ -12,9 +12,13 @@ services:
       - ./.env
     networks:
       - cars-net
+      - blacklist-net
+      - kafka-net
     depends_on:
       - cars-postgres
       - cars-redis
+      - redis-blacklist
+      - kafka
   cars-postgres:
     # possible change
     image: postgres:17.4-alpine

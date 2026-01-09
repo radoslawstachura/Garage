@@ -12,9 +12,11 @@ services:
       - ./.env
     networks:
       - repairs-net
+      - blacklist-net
     depends_on:
       - repairs-postgres
       - repairs-redis
+      - redis-blacklist
   repairs-postgres:
     image: postgres:17.4-alpine
     environment:

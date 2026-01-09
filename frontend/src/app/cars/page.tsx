@@ -51,7 +51,8 @@ export default function Cars() {
 
             const carsWithPlaceholder = carsData.map(car => ({
                 ...car,
-                ownerData: null
+                ownerData: null,
+                ownerLoading: true
             }));
 
             setCars(carsWithPlaceholder);
@@ -64,13 +65,22 @@ export default function Cars() {
 
                     setCars(currentCars =>
                         currentCars.map((c, i) =>
-                            i === index ? { ...c, ownerData } : c
+                            i === index
+                                ? { ...c, ownerData, ownerLoading: false }
+                                : c
                         )
                     );
                 } catch (error) {
                     console.log(error);
+                } finally {
+                    setCars(curr =>
+                        curr.map((c, i) =>
+                            i === index ? { ...c, ownerLoading: false } : c
+                        )
+                    );
                 }
             });
+
 
             // const carsWithDetails = await Promise.all(
             //     carsData.map(async (car) => {
@@ -347,7 +357,9 @@ export default function Cars() {
                                     <TableCell className="px-3 py-2 text-sm">{car.production_year}</TableCell>
                                     <TableCell className="px-3 py-2 text-sm">{formatMileage(car.mileage)}</TableCell>
                                     <TableCell className="px-3 py-2 text-sm">
-                                        {car.ownerData ? (
+                                        {car.ownerLoading ? (
+                                            <Skeleton className="h-4 w-24 rounded-md bg-gray-300 animate-pulse" />
+                                        ) : car.ownerData ? (
                                             <Link
                                                 href={`/owner/${car.owner_id}`}
                                                 className="underline text-blue-600 hover:text-blue-800"
@@ -355,10 +367,10 @@ export default function Cars() {
                                                 {car.ownerData.firstname} {car.ownerData.lastname}
                                             </Link>
                                         ) : (
-                                            <Skeleton className="h-4 w-24 rounded-md bg-gray-300 animate-pulse" />
+                                            <span>N/A</span>
                                         )}
                                     </TableCell>
-                                    <TableCell className="px-3 py-2 text-sm">{car.vin}</TableCell>
+                                    <TableCell className="px-3 py-2 text-sm">{car.vin} {car.ownerLoading}</TableCell>
                                     <TableCell className="px-3 py-2 text-right flex items-center justify-end gap-2">
                                         <Link href={`/car/${car.car_id}`}>
                                             <span className="bg-[#e4e6f7] text-[#5664d2] px-3 py-1 rounded-md text-sm font-medium hover:bg-[#cdd0f5] hover:text-[#333] cursor-pointer transition-colors">
