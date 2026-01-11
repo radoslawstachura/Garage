@@ -61,15 +61,18 @@ export default function Cars() {
 
             carsWithPlaceholder.forEach(async (car, index) => {
                 try {
-                    const ownerData = await apiClient.get<Owner>(`/owners/${car.owner_id}`);
 
-                    setCars(currentCars =>
-                        currentCars.map((c, i) =>
-                            i === index
-                                ? { ...c, ownerData, ownerLoading: false }
-                                : c
-                        )
-                    );
+                    if (car.owner_id) {
+                        const ownerData = await apiClient.get<Owner>(`/owners/${car.owner_id}`);
+
+                        setCars(currentCars =>
+                            currentCars.map((c, i) =>
+                                i === index
+                                    ? { ...c, ownerData, ownerLoading: false }
+                                    : c
+                            )
+                        );
+                    }
                 } catch (error) {
                     console.log(error);
                 } finally {

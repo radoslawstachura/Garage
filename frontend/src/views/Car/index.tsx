@@ -43,8 +43,10 @@ export default function CarClient({ id }: CarClientProps) {
             car.ownerLoading = true;
 
             try {
-                const owner = await apiClient.get<Owner>(`/owners/${car.owner_id}`);
-                car.ownerData = owner;
+                if (car.owner_id) {
+                    const owner = await apiClient.get<Owner>(`/owners/${car.owner_id}`);
+                    car.ownerData = owner;
+                }
             } catch {
                 car.ownerData = null;
             } finally {

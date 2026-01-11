@@ -23,6 +23,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 import { Owner } from "@/types/Owner";
 import { apiClient } from "@/lib/apiClient";
+import { useJwt } from "@/contexts/JwtContext";
 
 const formSchema = z.object({
     firstname: z.string().min(1).max(40),
@@ -36,6 +37,8 @@ export default function Owners() {
     const [owners, setOwners] = useState<Owner[]>([]);
     const [open, setOpen] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<boolean>(false);
+
+    const { role } = useJwt();
 
     async function getOwners() {
         try {
@@ -72,6 +75,17 @@ export default function Owners() {
             setOpen(false);
         } catch (error) {
             console.log(error);
+        }
+    }
+
+    async function handleDelete(id: number) {
+        try {
+            setIsLoading(true);
+            await apiClient.delete(`/owners/${id}`);
+        } catch (error) {
+            console.log(error);
+        } finally {
+            getOwners();
         }
     }
 
@@ -194,13 +208,17 @@ export default function Owners() {
                             </TableHead>
                             <TableHead className="px-3 py-2 font-semibold text-gray-700 text-sm text-right">
                             </TableHead>
+                            {role === "admin" &&
+                                <TableHead className="px-3 py-2 font-semibold text-gray-700 text-sm text-right">
+                                </TableHead>
+                            }
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {isLoading ? (
                             [...Array(5)].map((_, i) => (
                                 <TableRow key={i}>
-                                    <TableCell colSpan={6}>
+                                    <TableCell colSpan={role === "admin" ? 7 : 6}>
                                         <Skeleton className="h-4 w-full rounded-md bg-gray-300 animate-pulse" />
                                     </TableCell>
                                 </TableRow>
@@ -229,6 +247,14 @@ export default function Owners() {
                                             </span>
                                         </Link>
                                     </TableCell>
+                                    {role === "admin" &&
+                                        <TableCell className="px-3 py-2 text-right">
+                                            <span onClick={() => handleDelete(owner.owner_id)} className="bg-[#fee2e2] text-[#dc2626] px-3 py-1 rounded-md text-sm font-medium 
+                                                    hover:bg-[#fecaca] hover:text-[#991b1b] cursor-pointer transition-colors">
+                                                Delete
+                                            </span>
+                                        </TableCell>
+                                    }
                                 </TableRow>
                             ))
                         )}
