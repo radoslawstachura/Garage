@@ -269,4 +269,3 @@ export default function Owners() {
             </pre>
         </div>
     );
-}
